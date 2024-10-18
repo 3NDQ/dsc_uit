@@ -1,0 +1,163 @@
+STT,Pretrained Model,Links,Downloads/Stars,SortValue
+127,MiniLM-L6,https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2,"Downloads: 44960025, Likes: 2388",44960025
+8,CLIP-ViT-path-14,https://huggingface.co/openai/clip-vit-large-patch14,"Downloads: 23885454, Likes: 1398",23885454
+32,XLM-RoBERTa-large,https://huggingface.co/FacebookAI/xlm-roberta-large,"Downloads: 20230416, Likes: 329",20230416
+44,BGE-small,https://huggingface.co/BAAI/bge-small-en-v1.5,"Downloads: 15279736, Likes: 239",15279736
+144,DistilBERT,https://huggingface.co/distilbert/distilbert-base-uncased,"Downloads: 10909360, Likes: 524",10909360
+31,XLM-RoBERTa-base,https://huggingface.co/FacebookAI/xlm-roberta-base,"Downloads: 10879076, Likes: 569",10879076
+61,GPT2,https://huggingface.co/openai-community/gpt2,"Downloads: 9190882, Likes: 2287",9190882
+9,CLIP-ViT-path-16,https://huggingface.co/google/vit-base-patch16-224,"Downloads: 2685764, Likes: 646",2685764
+137,AlBERT-base,https://huggingface.co/albert/albert-base-v2,"Downloads: 2327274, Likes: 107",2327274
+51,SiLIP,https://huggingface.co/google/siglip-so400m-patch14-384,"Downloads: 2311711, Likes: 262",2311711
+113,DINOv2,https://huggingface.co/facebook/dinov2-base,"Downloads: 2168559, Likes: 75",2168559
+84,name,https://huggingface.co/liuhaotian/llava-v1.5-7b,"Downloads: 1762264, Likes: 329",1762264
+47,LLaVA,https://huggingface.co/liuhaotian/llava-v1.5-7b,"Downloads: 1762264, Likes: 329",1762264
+35,Multilingual-E5-large,https://huggingface.co/intfloat/multilingual-e5-large,"Downloads: 1398323, Likes: 750",1398323
+92,LayoutLM,https://huggingface.co/microsoft/layoutlmv3-base,"Downloads: 1307025, Likes: 314",1307025
+43,BGE-M3,https://huggingface.co/BAAI/bge-m3,"Downloads: 1163299, Likes: 1336",1163299
+13,LLaVA-Mistral-7B-v1.6,https://huggingface.co/llava-hf/llava-v1.6-mistral-7b-hf,"Downloads: 925673, Likes: 226",925673
+16,QWEN2-VL-7B,https://huggingface.co/Qwen/Qwen2-VL-7B-Instruct,"Downloads: 872137, Likes: 707",872137
+74,InfoXLM,https://huggingface.co/microsoft/infoxlm-large,"Downloads: 721423, Likes: 10",721423
+50,Florence-2-large,https://huggingface.co/microsoft/Florence-2-large,"Downloads: 571889, Likes: 1147",571889
+114,DETR,https://huggingface.co/facebook/detr-resnet-50,"Downloads: 483528, Likes: 683",483528
+77,Phi-3.5-Vision-Instruct,https://huggingface.co/microsoft/Phi-3.5-vision-instruct,"Downloads: 334279, Likes: 517",334279
+85,Gemma,https://huggingface.co/google/gemma-7b,"Downloads: 263496, Likes: 3040",263496
+145,Jina Embedding,https://huggingface.co/jinaai/jina-embeddings-v3,"Downloads: 257217, Likes: 368",257217
+38,Pix2Struc-large,https://huggingface.co/google/pix2struct-large,"Downloads: 240772, Likes: 34",240772
+83,BLIP-OPT-2.7B,https://huggingface.co/Salesforce/blip2-opt-2.7b,"Downloads: 240128, Likes: 306",240128
+17,QWEN2-VL-2B,https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct,"Downloads: 230071, Likes: 213",230071
+36,Multilingual-E5-large-instruct,https://huggingface.co/intfloat/multilingual-e5-large-instruct,"Downloads: 207610, Likes: 203",207610
+103,LLaVA-OneVision,https://huggingface.co/lmms-lab/llava-onevision-qwen2-7b-ov,"Downloads: 186354, Likes: 31",186354
+102,MiniCPM Family,https://huggingface.co/openbmb/MiniCPM-V-2_6,"Downloads: 184738, Likes: 765",184738
+11,DEiT-base-patch-16,https://huggingface.co/facebook/deit-base-distilled-patch16-224,"Downloads: 131019, Likes: 23",131019
+14,GLM-9B,https://huggingface.co/THUDM/glm-4v-9b,"Downloads: 83772, Likes: 215",83772
+18,ViLT,https://huggingface.co/dandelin/vilt-b32-finetuned-vqa,"Downloads: 83306, Likes: 384",83306
+12,PhoBERT-base,https://huggingface.co/vinai/phobert-base,"Downloads: 77920, Likes: 42",77920
+124,MiniCPM-LLaMA,https://huggingface.co/openbmb/MiniCPM-Llama3-V-2_5,"Downloads: 68162, Likes: 1358",68162
+149,NVIDIA Embedding,https://huggingface.co/nvidia/NV-Embed-v2,"Downloads: 67983, Likes: 132",67983
+54,Tesseract,https://github.com/tesseract-ocr/tesseract,"Stars: 61583, Forks: 9441, Watchers: 61583",61583
+60,LLaMA,https://github.com/meta-llama/llama,"Stars: 55967, Forks: 9521, Watchers: 55967",55967
+19,InternVL2-8B,https://huggingface.co/OpenGVLab/InternVL2-8B,"Downloads: 54840, Likes: 130",54840
+70,YOLOv5,https://github.com/ultralytics/yolov5,"Stars: 50169, Forks: 16193, Watchers: 50169",50169
+146,Jina CLIP,https://huggingface.co/jinaai/jina-clip-v1,"Downloads: 46425, Likes: 208",46425
+20,InternVL2-26B,https://huggingface.co/OpenGVLab/InternVL2-26B,"Downloads: 43256, Likes: 113",43256
+162,PaddleOCR,https://github.com/PaddlePaddle/PaddleOCR,"Stars: 43189, Forks: 7734, Watchers: 43189",43189
+4,BERT,https://github.com/google-research/bert,"Stars: 38001, Forks: 9580, Watchers: 38001",38001
+106,MTGV Team,https://huggingface.co/mtgv/MobileLLaMA-1.4B-Chat,"Downloads: 35020, Likes: 16",35020
+81,LLaMA-3-VILA,https://huggingface.co/Efficient-Large-Model/Llama-3-VILA1.5-8B,"Downloads: 31385, Likes: 28",31385
+41,UltraLytics,https://github.com/ultralytics/ultralytics,"Stars: 30402, Forks: 5893, Watchers: 30402",30402
+59,Detectron2,https://github.com/facebookresearch/detectron2,"Stars: 30205, Forks: 7436, Watchers: 30205",30205
+112,PALI-Gemma,https://huggingface.co/google/paligemma-3b-pt-224,"Downloads: 29470, Likes: 247",29470
+147,Jina-ColBERT,https://huggingface.co/jinaai/jina-colbert-v2,"Downloads: 28486, Likes: 75",28486
+78,Deplot,https://huggingface.co/google/deplot,"Downloads: 27319, Likes: 238",27319
+110,Vision-CAIR,https://github.com/Vision-CAIR/MiniGPT-4,"Stars: 25347, Forks: 2913, Watchers: 25347",25347
+3,CLIP,https://github.com/openai/CLIP,"Stars: 25272, Forks: 3249, Watchers: 25272",25272
+27,EasyOCR,https://github.com/JaidedAI/EasyOCR,"Stars: 24047, Forks: 3131, Watchers: 24047",24047
+128,TrOCR,https://github.com/microsoft/unilm/tree/master/trocr,"Stars: 19789, Forks: 2521, Watchers: 19789",19789
+15,CogVLM2-LLaMA3-19B,https://huggingface.co/THUDM/cogvlm2-llama3-chat-19B,"Downloads: 19699, Likes: 198",19699
+5,ResNet,https://github.com/pytorch/vision/blob/main/torchvision/models/resnet.py,"Stars: 16092, Forks: 6939, Watchers: 16092",16092
+130,Grounded SAM,https://github.com/IDEA-Research/Grounded-Segment-Anything,"Stars: 14926, Forks: 1384, Watchers: 14926",14926
+122,DALL-E Mini,https://github.com/borisdayma/dalle-mini,"Stars: 14744, Forks: 1207, Watchers: 14744",14744
+62,SwinTransformer,https://github.com/microsoft/Swin-Transformer?fbclid=IwAR2QJIxHhru5WA5TL-dRXQwQdaknZ-FcWLnq_eCDdXEi6NLa5B6f9iaV7FQ,"Stars: 13719, Forks: 2041, Watchers: 13719",13719
+37,Pix2Struc-base,https://huggingface.co/google/pix2struct-base,"Downloads: 13450, Likes: 62",13450
+49,name,https://huggingface.co/arcee-ai/Llama-3.1-SuperNova-Lite,"Downloads: 11966, Likes: 162",11966
+45,Vietnamese SBert,https://huggingface.co/keepitreal/vietnamese-sbert,"Downloads: 11836, Likes: 41",11836
+129,SAM2,https://github.com/facebookresearch/sam2,"Stars: 11507, Forks: 999, Watchers: 11507",11507
+29,InstructionBLIP,https://github.com/salesforce/LAVIS/tree/main/projects/instructblip,"Stars: 9752, Forks: 955, Watchers: 9752",9752
+132,BLIP-2,https://github.com/salesforce/LAVIS/,"Stars: 9752, Forks: 955, Watchers: 9752",9752
+94,BLIP-2,https://github.com/salesforce/LAVIS/tree/main/projects/blip2,"Stars: 9752, Forks: 955, Watchers: 9752",9752
+125,YOLOv10,https://github.com/THU-MIG/yolov10,"Stars: 9674, Forks: 933, Watchers: 9674",9674
+88,Image Bind,https://github.com/facebookresearch/ImageBind,"Stars: 8271, Forks: 759, Watchers: 8271",8271
+107,Yi Family,https://github.com/01-ai/Yi,"Stars: 7626, Forks: 471, Watchers: 7626",7626
+48,Nano-LLaVA,https://huggingface.co/qnguyen3/nanoLLaVA,"Downloads: 7182, Likes: 141",7182
+156,EnViT5 Translator,https://huggingface.co/VietAI/envit5-translation,"Downloads: 6743, Likes: 29",6743
+159,EnViT5 Translator,https://huggingface.co/VietAI/envit5-translation,"Downloads: 6743, Likes: 29",6743
+148,XLNet,https://github.com/zihangdai/xlnet/,"Stars: 6181, Forks: 1177, Watchers: 6181",6181
+21,DeepSeek-VL-7B-chat,https://huggingface.co/deepseek-ai/deepseek-vl-7b-chat,"Downloads: 5944, Likes: 220",5944
+150,Donut,https://github.com/clovaai/donut,"Stars: 5759, Forks: 468, Watchers: 5759",5759
+87,Halong Embedding,https://huggingface.co/hiieu/halong_embedding,"Downloads: 5536, Likes: 21",5536
+23,ViT5-base,https://huggingface.co/VietAI/vit5-base,"Downloads: 5321, Likes: 11",5321
+76,ViT5-base,https://huggingface.co/VietAI/vit5-base,"Downloads: 5321, Likes: 11",5321
+115,GOT,https://github.com/Ucas-HaoranWei/GOT-OCR2.0,"Stars: 5215, Forks: 425, Watchers: 5215",5215
+56,EfficientNet,https://github.com/tensorflow/tpu/tree/master/models/official/efficientnet,"Stars: 5213, Forks: 1769, Watchers: 5213",5213
+93,BLIP,https://github.com/salesforce/BLIP,"Stars: 4717, Forks: 625, Watchers: 4717",4717
+131,YOLO-World,https://github.com/AILab-CVC/YOLO-World,"Stars: 4495, Forks: 438, Watchers: 4495",4495
+25,DEiT,https://github.com/facebookresearch/deit?fbclid=IwAR32cOmngKSwtFl3cLJQZ0UTG_RCZzQW3b7J7A6DWcOmr7GDjOIrS7VtBrc,"Stars: 4030, Forks: 554, Watchers: 4030",4030
+46,PhoGPT,https://huggingface.co/vinai/PhoGPT-4B-Chat,"Downloads: 3949, Likes: 27",3949
+86,OpenFlamingo,https://github.com/mlfoundations/open_flamingo,"Stars: 3691, Forks: 280, Watchers: 3691",3691
+104,Mini-Gemini collection,https://github.com/dvlab-research/MGM,"Stars: 3189, Forks: 277, Watchers: 3189",3189
+53,VisualBERT,https://huggingface.co/uclanlp/visualbert-vqa,"Downloads: 3127, Likes: 3",3127
+68,CRAFT,https://github.com/clovaai/CRAFT-pytorch,"Stars: 3085, Forks: 874, Watchers: 3085",3085
+133,Recognize-Anything,https://github.com/xinyu1205/recognize-anything,"Stars: 2790, Forks: 275, Watchers: 2790",2790
+157,FasterRCNN,https://github.com/ShaoqingRen/faster_rcnn,"Stars: 2704, Forks: 1216, Watchers: 2704",2704
+1,ViTern-1B-v2,https://huggingface.co/5CD-AI/Vintern-1B-v2,"Downloads: 2605, Likes: 39",2605
+28,OFA,https://github.com/OFA-Sys/OFA,"Stars: 2404, Forks: 247, Watchers: 2404",2404
+135,ELECTRA,https://github.com/google-research/electra,"Stars: 2325, Forks: 352, Watchers: 2325",2325
+101,mPLUG-Owl3,https://github.com/X-PLUG/mPLUG-Owl,"Stars: 2269, Forks: 172, Watchers: 2269",2269
+71,GLIP,https://github.com/microsoft/GLIP,"Stars: 2187, Forks: 192, Watchers: 2187",2187
+69,DeBERTa,https://github.com/microsoft/DeBERTa,"Stars: 1976, Forks: 225, Watchers: 1976",1976
+7,ViSoBERT,https://huggingface.co/uitnlp/visobert,"Downloads: 1715, Likes: 32",1715
+152,ALBEF,https://github.com/salesforce/ALBEF,"Stars: 1535, Forks: 196, Watchers: 1535",1535
+80,MobileNet,https://huggingface.co/google/deeplabv3_mobilenet_v2_1.0_513,"Downloads: 1517, Likes: 5",1517
+66,ELMO,https://github.com/HIT-SCIR/ELMoForManyLangs,"Stars: 1458, Forks: 244, Watchers: 1458",1458
+138,FLAVA,https://github.com/facebookresearch/multimodal/tree/main/examples/flava,"Stars: 1438, Forks: 138, Watchers: 1438",1438
+75,ViBERT-base,https://huggingface.co/FPTAI/vibert-base-cased/tree/main,"Downloads: 1377, Likes: 10",1377
+121,mT5,https://github.com/google-research/multilingual-t5,"Stars: 1247, Forks: 128, Watchers: 1247",1247
+26,Multilingual-T5,https://github.com/google-research/multilingual-t5,"Stars: 1247, Forks: 128, Watchers: 1247",1247
+99,TinyGPT,https://github.com/DLYuanGod/TinyGPT-V,"Stars: 1239, Forks: 76, Watchers: 1239",1239
+140,LXMERT,https://github.com/airsplay/lxmert,"Stars: 930, Forks: 158, Watchers: 930",930
+105,AnyGPT,https://github.com/OpenMOSS/AnyGPT,"Stars: 757, Forks: 60, Watchers: 757",757
+111,PandaGPT,https://github.com/yxuansu/PandaGPT,"Stars: 756, Forks: 60, Watchers: 756",756
+2,Multilingual-CLIP,https://github.com/FreddeFrallan/Multilingual-CLIP,"Stars: 754, Forks: 72, Watchers: 754",754
+153,SLIP,https://github.com/facebookresearch/SLIP,"Stars: 743, Forks: 67, Watchers: 743",743
+154,Helsinki NLP,https://github.com/Helsinki-NLP/Opus-MT,"Stars: 607, Forks: 71, Watchers: 607",607
+10,VietOCR,https://github.com/pbcquoc/vietocr,"Stars: 601, Forks: 204, Watchers: 601",601
+161,Parseq,https://github.com/baudm/parseq,"Stars: 568, Forks: 125, Watchers: 568",568
+117,BLOOMZ + mT0\,https://github.com/bigscience-workshop/xmtf,"Stars: 513, Forks: 37, Watchers: 513",513
+96,MMA,https://github.com/luogen1996/LaVIN,"Stars: 502, Forks: 37, Watchers: 502",502
+126,OpenL3,https://github.com/marl/openl3,"Stars: 458, Forks: 58, Watchers: 458",458
+55,MultimodalOCR,https://github.com/Yuliang-Liu/MultimodalOCR,"Stars: 452, Forks: 29, Watchers: 452",452
+116,BLOOM,https://arxiv.org/abs/2211.05100,Error: HTTP 429,429
+42,VinVL,https://github.com/pzzhang/VinVL,"Stars: 349, Forks: 25, Watchers: 349",349
+89,Gemini,https://huggingface.co/describeai/gemini,"Downloads: 348, Likes: 30",348
+40,SwinTextSpotter,https://github.com/mxin262/SwinTextSpotter,"Stars: 270, Forks: 40, Watchers: 270",270
+142,MAGIC,https://github.com/yxuansu/MAGIC,"Stars: 252, Forks: 27, Watchers: 252",252
+160,Deepsolo,https://github.com/ViTAE-Transformer/DeepSolo,"Stars: 242, Forks: 34, Watchers: 242",242
+82,Vistral-V-7B,https://huggingface.co/Vi-VLM/Vistral-V-7B,"Downloads: 234, Likes: 16",234
+6,CafeBERT,https://huggingface.co/uitnlp/CafeBERT,"Downloads: 216, Likes: 11",216
+73,VinaLLaMA,https://huggingface.co/vilm/vinallama-7b-chat-GGUF,"Downloads: 197, Likes: 10",197
+100,looongLLaVA,https://github.com/FreedomIntelligence/LongLLaVA,"Stars: 159, Forks: 10, Watchers: 159",159
+141,BridgeTower,https://github.com/microsoft/BridgeTower,"Stars: 154, Forks: 6, Watchers: 154",154
+109,ShareGPT4V,https://github.com/ShareGPT4Omni/ShareGPT4V,"Stars: 134, Forks: 4, Watchers: 134",134
+139,FIBER,https://github.com/microsoft/FIBER,"Stars: 128, Forks: 12, Watchers: 128",128
+22,DeepSeek-VL-7B-base,https://huggingface.co/deepseek-ai/deepseek-vl-7b-base,"Downloads: 118, Likes: 43",118
+119,Sailor,https://github.com/sail-sg/sailor-llm,"Stars: 105, Forks: 8, Watchers: 105",105
+24,BARTPho,https://github.com/VinAIResearch/BARTpho,"Stars: 98, Forks: 7, Watchers: 98",98
+118,mBLIP,https://github.com/gregor-ge/mBLIP,"Stars: 85, Forks: 7, Watchers: 85",85
+95,LLaMA-Adapter-V2,https://github.com/ZrrSkywalker/LLaMA-Adapter,"Stars: 83, Forks: 7, Watchers: 83",83
+108,mPLUG,https://github.com/X-PLUG/mPLUG,"Stars: 81, Forks: 6, Watchers: 81",81
+63,VinAI-Translate-Vi-to-En,https://huggingface.co/vinai/vinai-translate-en2vi,"Downloads: 73, Likes: 2",73
+39,ESTextSpotter,https://github.com/mxin262/ESTextSpotter,"Stars: 71, Forks: 6, Watchers: 71",71
+67,ViDEBERTa,https://github.com/HySonLab/ViDeBERTa,"Stars: 53, Forks: 9, Watchers: 53",53
+90,Vietnamese LLaMA 2,https://huggingface.co/VietnamAIHub/Vietnamese_LLama2_13B_8K_SFT_General_Domain_Knowledge,"Downloads: 53, Likes: 7",53
+30,PhoW2V,https://github.com/datquocnguyen/PhoW2V,"Stars: 49, Forks: 3, Watchers: 49",49
+91,LaVy,https://github.com/baochi0212/LaVy,"Stars: 38, Forks: 6, Watchers: 38",38
+120,ViSocialT5-base,https://huggingface.co/5CD-AI/visocial-T5-base,"Downloads: 38, Likes: 20",38
+123,GenSUra,https://huggingface.co/ura-hcmut/GemSUra-7B,"Downloads: 30, Likes: 5",30
+143,ASIF,https://github.com/noranta4/ASIF,"Stars: 23, Forks: 0, Watchers: 23",23
+151,EAST,https://github.com/foamliu/EAST,"Stars: 18, Forks: 4, Watchers: 18",18
+64,Open-LLaMA-7B,https://huggingface.co/nhanv/open-llama-7b-vi,"Downloads: 11, Likes: 2",11
+158,MemeTector,https://github.com/mever-team/memetector,"Stars: 4, Forks: 0, Watchers: 4",4
+155,MemeTector,https://github.com/mever-team/memetector,"Stars: 4, Forks: 0, Watchers: 4",4
+72,UNITER-base,https://huggingface.co/visualjoyce/transformers4vl-uniter-base,"Downloads: 3, Likes: 0",3
+34,ERNIE-M-large,https://huggingface.co/PaddlePaddle/ernie-m-large,"Downloads: 0, Likes: 9",0
+97,Word2Vec,https://www.tensorflow.org/text/tutorials/word2vec,N/A or Unsupported Platform,0
+98,ViLBERT,https://arxiv.org/pdf/1810.04805,Invalid arXiv URL,0
+79,DenseNet,https://huggingface.co/qualcomm/DenseNet-121,"Downloads: 0, Likes: 0",0
+65,InceptionV3,https://huggingface.co/docs/timm/models/inception-v3,Error fetching Hugging Face metrics,0
+33,ERNIE-M-base,https://huggingface.co/PaddlePaddle/ernie-m-base,"Downloads: 0, Likes: 4",0
+57,GloVE,https://nlp.stanford.edu/projects/glove/,N/A or Unsupported Platform,0
+52,FastText,https://fasttext.cc/?fbclid=IwAR1ItI5ifFXd6ja2pELSD8lTuQhpjoDbREsRsRWsSKRoJWh13ws007xVZlk,N/A or Unsupported Platform,0
+134,GPT-3.5-Turbo,https://platform.openai.com/docs/models/gpt-3-5-turbo,N/A or Unsupported Platform,0
+136,Pixtral,https://huggingface.co/mistralai/Pixtral-12B-2409,"Downloads: 0, Likes: 379",0
+58,,,No URL Provided,0
