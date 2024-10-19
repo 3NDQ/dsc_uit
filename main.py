@@ -56,7 +56,7 @@ def main():
     parser.add_argument('--test_json', type=str, default='/kaggle/input/vimmsd-public-test/vimmsd-public-test.json', help='Path to the testing JSON file')
     parser.add_argument('--test_image_folder', type=str, default='/kaggle/input/vimmsd-public-test/public-test-images/dev-images', help='Path to the testing images folder')
     # parser.add_argument('--model_path', type=str, default='sarcasm_classifier_model.pth', help='Path to trained model')
-    parser.add_argument('--model_paths', type=str, nargs='+', required=True, help='Paths to trained models')
+    parser.add_argument('--model_paths', type=str, nargs='+', required=False, help='Paths to trained models')
     
     # Common arguments
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size for training and testing')
