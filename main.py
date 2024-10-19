@@ -270,7 +270,7 @@ def train_and_evaluate(train_json, train_image_folder, tokenizer, device,
         logging.error(f"Failed to save OCR cache: {e}")
 
 def run_test(test_json, test_image_folder, tokenizer, device, 
-             batch_size=16, num_workers=4, use_test_ocr_cache=False, test_ocr_cache_path='test_ocr_cache.json', model_path='sarcasm_classifier_model.pth',
+             batch_size=16, num_workers=4, use_test_ocr_cache=True, test_ocr_cache_path='test_ocr_cache.json', model_path='sarcasm_classifier_model.pth',
              text_encoder=None, image_encoder=None):
     logging.info("Starting testing...")
     
