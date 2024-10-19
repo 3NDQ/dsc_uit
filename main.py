@@ -154,7 +154,7 @@ def main():
 
 def train_and_evaluate(train_json, train_image_folder, tokenizer, device, 
                       num_epochs=50, patience=10, batch_size=16, num_workers=4,
-                      use_train_ocr_cache=False, train_ocr_cache_path='train_ocr_cache.json',
+                      use_train_ocr_cache=True, train_ocr_cache_path='train_ocr_cache.json',
                       text_encoder=None, image_encoder=None):
     logging.info("Starting training and evaluation...")
     
