@@ -13,6 +13,7 @@ from utils import evaluate_model
 from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 import argparse
+import sys
 import logging
 from model_factory import get_text_encoder, get_image_encoder, get_tokenizer  # Import factory functions
 
@@ -20,15 +21,23 @@ from model_factory import get_text_encoder, get_image_encoder, get_tokenizer  # 
 
 def main():
     # Configure logging
+    # logging.basicConfig(
+    #     level=logging.INFO,
+    #     format='%(asctime)s [%(levelname)s] %(message)s',
+    #     handlers=[
+    #         logging.StreamHandler(),
+    #         logging.FileHandler("sarcasm_classifier.log")  # Optional: Log to a file
+    #     ]
+    # )
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s [%(levelname)s] %(message)s',
         handlers=[
-            logging.StreamHandler(),
+            logging.StreamHandler(sys.stdout),  # Explicitly use sys.stdout
             logging.FileHandler("sarcasm_classifier.log")  # Optional: Log to a file
-        ]
+        ],
+        force=True
     )
-    
     parser = argparse.ArgumentParser(description="Vietnamese Sarcasm Classifier")
     
     # Mode: train or test
