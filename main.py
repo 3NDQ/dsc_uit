@@ -9,8 +9,6 @@ from model_factory import get_text_encoder, get_image_encoder, get_tokenizer
 from train_and_evaluate import train_and_evaluate  
 from run_test_multiple_models import run_test_multiple_models 
 
-# ... (Rest of the imports and existing code)
-
 def main():
     logging.basicConfig(
         level=logging.INFO,

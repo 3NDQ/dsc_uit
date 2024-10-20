@@ -94,16 +94,16 @@ def run_test_multiple_models(test_json, test_image_folder, tokenizer, device,
         }
         
         # Save predictions to JSON for each model
-        output_filename = f'results_model_{idx+1}.json'
+        output_filename = f'results_model_{idx + 1}.json'
         try:
             with open(output_filename, 'w', encoding='utf-8') as f:
                 json.dump(output, f, ensure_ascii=False, indent=2)
             logging.info(f"Predictions saved to {output_filename} for model {idx+1}")
         except Exception as e:
-            logging.error(f"Failed to save predictions for model {idx+1}: {e}")
+            logging.error(f"Failed to save predictions for model {idx + 1}: {e}")
         
         # Save OCR cache explicitly
         try:
             test_dataset.save_ocr_cache()
         except Exception as e:
-            logging.error(f"Failed to save OCR cache for model {idx+1}: {e}")
+            logging.error(f"Failed to save OCR cache for model {idx + 1}: {e}")
