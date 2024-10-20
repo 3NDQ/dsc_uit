@@ -70,7 +70,7 @@ def evaluate_model(model, dataloader, device):
     # Overall metrics
     overall_acc = accuracy_score(all_labels, all_preds)
     overall_precision, overall_recall, overall_f1, _ = precision_recall_fscore_support(
-        all_labels, all_preds, average='weighted', zero_division=0
+        all_labels, all_preds, average='macro', zero_division=0
     )
     
     logging.info(f"Overall Accuracy: {overall_acc:.4f}")

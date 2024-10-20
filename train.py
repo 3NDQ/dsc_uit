@@ -76,9 +76,9 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         logging.info(f"Epoch {epoch+1}/{num_epochs} - Val Loss: {avg_val_loss:.4f}")
         
         # Tính F1, Precision, Recall cho từng lớp và tổng thể
-        f1 = f1_score(all_labels, all_preds, average='weighted')
-        precision = precision_score(all_labels, all_preds, average='weighted')
-        recall = recall_score(all_labels, all_preds, average='weighted')
+        f1 = f1_score(all_labels, all_preds, average='macro')
+        precision = precision_score(all_labels, all_preds, average='macro')
+        recall = recall_score(all_labels, all_preds, average='macro')
         logging.info(f"Epoch {epoch+1}/{num_epochs} - F1 Score: {f1:.4f} - Precision: {precision:.4f} - Recall: {recall:.4f}")
         
         # Check for improvement and save top 5 models
