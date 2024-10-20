@@ -22,7 +22,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     early_stopping = EarlyStopping(patience=patience)
     scaler = amp.GradScaler()  # For mixed precision training
     
-    best_models = []  # Danh sách lưu 5 mô hình tốt nhất
+    best_models = []  # List to store the top 5 models based on F1 score
     
     for epoch in range(num_epochs):
         model.train()
@@ -75,39 +75,33 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         avg_val_loss = val_loss / len(val_dataloader) if len(val_dataloader) > 0 else 0
         logging.info(f"Epoch {epoch+1}/{num_epochs} - Val Loss: {avg_val_loss:.4f}")
         
-        # Tính F1, Precision, Recall cho từng lớp và tổng thể
-        f1 = f1_score(all_labels, all_preds, average='weighted')
-        precision = precision_score(all_labels, all_preds, average='weighted')
-        recall = recall_score(all_labels, all_preds, average='weighted')
+        # Calculate F1, Precision, Recall for each class and overall
+        f1 = f1_score(all_labels, all_preds, average='macro')
+        precision = precision_score(all_labels, all_preds, average='macro')
+        recall = recall_score(all_labels, all_preds, average='macro')
         logging.info(f"Epoch {epoch+1}/{num_epochs} - F1 Score: {f1:.4f} - Precision: {precision:.4f} - Recall: {recall:.4f}")
         
-        # Check for improvement and save top 5 models
+        # Check for improvement and save top 5 models based on F1 score
         if len(best_models) < 5:
-            heapq.heappush(best_models, (-avg_val_loss, epoch, model.state_dict()))  # Lưu vào danh sách các mô hình tốt nhất
+            heapq.heappush(best_models, (f1, epoch, model.state_dict()))  # Store model with F1 score
             torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pth")
             logging.info(f"Model saved at epoch {epoch+1}")
         else:
-            # Lưu mô hình mới nếu nó tốt hơn mô hình kém nhất trong danh sách
-            if -best_models[0][0] > avg_val_loss:
-                heapq.heapreplace(best_models, (-avg_val_loss, epoch, model.state_dict()))
+            # Save the model if its F1 score is better than the lowest one in the heap
+            if f1 > best_models[0][0]:
+                heapq.heapreplace(best_models, (f1, epoch, model.state_dict()))
                 torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pth")
                 logging.info(f"Model saved at epoch {epoch+1}")
         
-        # Early stopping check
+        # Early stopping check based on validation loss
         early_stopping(avg_val_loss)
         if early_stopping.early_stop:
             logging.info("Early stopping triggered")
             break
     
-    # Load the best model
-    best_val_loss, best_epoch, best_model_state = min(best_models, key=lambda x: -x[0])
+    # Load the best model based on F1 score
+    best_f1, best_epoch, best_model_state = max(best_models, key=lambda x: x[0])
     model.load_state_dict(best_model_state)
-    logging.info(f"Best model from epoch {best_epoch+1} loaded.")
-    
-    # Lưu toàn bộ mô hình nếu epoch < 5
-    if num_epochs < 5:
-        for epoch in range(num_epochs):
-            torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pth")
+    logging.info(f"Best model from epoch {best_epoch+1} with F1 score {best_f1:.4f} loaded.")
     
     return model
-
