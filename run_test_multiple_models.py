@@ -9,9 +9,9 @@ from test import test_model
 from sarcasm_models import VietnameseSarcasmClassifier
 
 def run_test_multiple_models(test_json, test_image_folder, tokenizer, device, 
-                            batch_size=16, num_workers=4, use_test_ocr_cache=False, 
-                            test_ocr_cache_path='test_ocr_cache.json', model_paths=None, 
-                            text_encoder=None, image_encoder=None):
+                            batch_size, num_workers, 
+                            test_ocr_cache_path, model_paths, 
+                            text_encoder, image_encoder, fusion_method, use_test_ocr_cache=False):
     if model_paths is None:
         logging.error("No model paths were provided, using default.")
     else:
@@ -38,7 +38,7 @@ def run_test_multiple_models(test_json, test_image_folder, tokenizer, device,
 
     # Initialize model with passed encoders
     try:
-        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, num_labels=4).to(device)
+        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method, num_labels=4).to(device)
     except Exception as e:
         logging.error(f"Failed to initialize the model: {e}")
         return

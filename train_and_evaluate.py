@@ -10,9 +10,9 @@ from sarcasm_models import VietnameseSarcasmClassifier
 from sklearn.model_selection import train_test_split
 
 def train_and_evaluate(train_json, train_image_folder, tokenizer, device, 
-                      num_epochs=50, patience=10, batch_size=16, num_workers=4,
-                      use_train_ocr_cache=False, train_ocr_cache_path='train_ocr_cache.json',
-                      text_encoder=None, image_encoder=None):
+                      num_epochs, patience, batch_size, num_workers, train_ocr_cache_path,
+                      text_encoder, image_encoder, learning_rate, 
+                      val_size, random_state, fusion_method, use_train_ocr_cache=False):
     logging.info("Starting training and evaluation...")
     
     # Load JSON data
@@ -44,9 +44,9 @@ def train_and_evaluate(train_json, train_image_folder, tokenizer, device,
     try:
         train_idx, val_idx = train_test_split(
             range(len(labels)), 
-            test_size=0.2, 
+            test_size=val_size, 
             stratify=labels, 
-            random_state=42
+            random_state=random_state
         )
         logging.info('Finished splitting train/dev indices')
     except Exception as e:
@@ -75,7 +75,7 @@ def train_and_evaluate(train_json, train_image_folder, tokenizer, device,
     
     # Initialize model with passed encoders
     try:
-        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, num_labels=4).to(device)
+        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method, num_labels=4).to(device)
         logging.info('Model initialized and moved to device')
     except Exception as e:
         logging.error(f"Failed to initialize the model: {e}")
@@ -88,7 +88,8 @@ def train_and_evaluate(train_json, train_image_folder, tokenizer, device,
         val_dataloader, 
         device, 
         num_epochs=num_epochs, 
-        patience=patience
+        patience=patience,
+        learning_rate=learning_rate
     )
     logging.info('Model training complete')
     

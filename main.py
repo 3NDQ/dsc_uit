@@ -38,7 +38,7 @@ def main():
     # Testing arguments
     parser.add_argument('--test_json', type=str, default='/kaggle/input/vimmsd-public-test/vimmsd-public-test.json', help='Path to the testing JSON file')
     parser.add_argument('--test_image_folder', type=str, default='/kaggle/input/vimmsd-public-test/public-test-images/dev-images', help='Path to the testing images folder')
-    parser.add_argument('--model_paths', type=str, nargs='+', default=["/kaggle/input/dsc-uit-gadgadgad/dsc_uit/model_epoch_1.pth", "/kaggle/input/dsc-uit-gadgadgad/dsc_uit/model_epoch_2.pth", "/kaggle/input/dsc-uit-gadgadgad/dsc_uit/model_epoch_3.pth", "/kaggle/input/dsc-uit-gadgadgad/dsc_uit/model_epoch_4.pth", "/kaggle/input/dsc-uit-gadgadgad/dsc_uit/model_epoch_5.pth"], required=False, help='Paths to trained models')
+    parser.add_argument('--model_paths', type=str, nargs='+', default=['model_epoch_1.pth'], required=False, help='Paths to trained models')
     
     # Common arguments
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size for training and testing')
@@ -55,9 +55,13 @@ def main():
     # Training hyperparameters
     parser.add_argument('--num_epochs', type=int, default=50, help='Number of training epochs')
     parser.add_argument('--patience', type=int, default=10, help='Patience for early stopping')
+    parser.add_argument('--learning_rate', type=float, default=2e-5, help='Learning rate for the optimizer')
+    parser.add_argument('--val_size', type=float, default=0.2, help='Val size for train test split')
+    parser.add_argument('--random_state', type=int, default=42, help='Random state')
+    parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention'], help='Method to fuse features: concat (default) or attention')
     args = parser.parse_args()
     
-    # Validate paths
+    # Validate paths1411
     if args.mode == 'train':
         if not os.path.isfile(args.train_json):
             parser.error(f"Training JSON file not found at {args.train_json}")
@@ -117,7 +121,11 @@ def main():
             use_train_ocr_cache=args.use_train_ocr_cache,
             train_ocr_cache_path=args.train_ocr_cache_path,
             text_encoder=text_encoder,
-            image_encoder=image_encoder 
+            image_encoder=image_encoder,
+            learning_rate=args.learning_rate,
+            val_size=args.val_size,
+            fusion_method = args.fusion_method,
+            random_state= args.random_state
         )
    
     elif args.mode == 'test':
@@ -132,6 +140,7 @@ def main():
             test_ocr_cache_path=args.test_ocr_cache_path,
             model_paths=args.model_paths,  
             text_encoder=text_encoder,
+            fusion_method = args.fusion_method,
             image_encoder=image_encoder
         )
 

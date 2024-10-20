@@ -10,8 +10,8 @@ import heapq  # Để lưu 5 mô hình tốt nhất
 from sklearn.metrics import f1_score, precision_score, recall_score
 import numpy as np
 
-def train_model(model, train_dataloader, val_dataloader, device, num_epochs=20, patience=5):
-    optimizer = torch.optim.AdamW(model.parameters(), lr=2e-5)
+def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate):
+    optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     
     num_training_steps = len(train_dataloader) * num_epochs
     num_warmup_steps = num_training_steps // 10

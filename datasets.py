@@ -5,7 +5,7 @@ import json
 from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
-# import easyocr
+import easyocr
 import torch
 import logging
 
@@ -36,7 +36,7 @@ class SarcasmDataset(Dataset):
         ])
         
         # Initialize EasyOCR reader once with GPU disabled
-        # self.reader = easyocr.Reader(['vi', 'en'], gpu=False)
+        self.reader = easyocr.Reader(['vi', 'en'], gpu=False)
         
         # Initialize OCR cache if enabled
         if self.use_ocr_cache:

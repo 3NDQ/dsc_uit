@@ -5,7 +5,7 @@ import torch.nn as nn
 import logging
 
 class VietnameseSarcasmClassifier(nn.Module):
-    def __init__(self, text_encoder, image_encoder, num_labels=4):
+    def __init__(self, text_encoder, image_encoder, num_labels=4, fusion_method = 'concat'):
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
         
@@ -16,6 +16,9 @@ class VietnameseSarcasmClassifier(nn.Module):
         combined_dim = self.image_encoder.config.hidden_size + self.text_encoder.config.hidden_size
         logging.info(f"Combined dimension: {combined_dim}")
         
+        if self.fusion_method == 'attention':
+            self.self_attention = nn.MultiheadAttention(embed_dim=combined_dim, num_heads=8)
+            logging.info("Self-Attention layer initialized.")
         self.projector = nn.Sequential(
             nn.Linear(combined_dim, 1024),
             nn.LayerNorm(1024),
@@ -44,12 +47,18 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_outputs = self.text_encoder(input_ids=input_ids, attention_mask=attention_mask)
         text_features = text_outputs.last_hidden_state[:, 0, :]
         
-        # Combine features
-        combined_features = torch.cat((image_features, text_features), dim=1)
-        logging.debug("Combined image and text features.")
-        
-        # Project to multimodal space
-        shared_features = self.projector(combined_features)
+        if self.fusion_method == 'attention':
+            # Combine features using attention
+            combined_features = torch.cat((image_features, text_features), dim=1).unsqueeze(0)
+            attended_features, _ = self.self_attention(combined_features, combined_features, combined_features)
+            attended_features = attended_features.squeeze(0)  # Remove extra dimension
+            logging.debug("Applied self-attention to combined features.")
+            shared_features = self.projector(attended_features)
+        else:
+            # Default method: concatenate features
+            combined_features = torch.cat((image_features, text_features), dim=1)
+            logging.debug("Combined image and text features using concatenation.")
+            shared_features = self.projector(combined_features)
         logging.debug("Projected combined features to shared space.")
         
         # Multiple classification heads
