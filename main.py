@@ -383,6 +383,10 @@ def run_test_multiple_models(test_json, test_image_folder, tokenizer, device,
                             batch_size=16, num_workers=4, use_test_ocr_cache=True, 
                             test_ocr_cache_path='test_ocr_cache.json', model_paths=None, 
                             text_encoder=None, image_encoder=None):
+    if model_paths is None:
+        logging.error("No model paths were provided, using default.")
+    else:
+        logging.info(f"Model paths received: {model_paths}")
     logging.info("Starting testing with multiple models...")
 
     # Create test dataset with OCR caching parameters
