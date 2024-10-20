@@ -19,7 +19,6 @@ class SarcasmDataset(Dataset):
         self.max_length = max_length
         self.use_ocr_cache = use_ocr_cache
         self.ocr_cache_path = ocr_cache_path
-        self.reader = easyocr.Reader(['vi', 'en'], gpu=False)
 
         # Label mapping
         self.label_to_id = {
@@ -35,7 +34,7 @@ class SarcasmDataset(Dataset):
             transforms.Normalize(mean=[0.485, 0.456, 0.406], 
                                  std=[0.229, 0.224, 0.225])
         ])
-                
+        
         # Initialize OCR cache if enabled
         if self.use_ocr_cache:
             if os.path.exists(self.ocr_cache_path):
@@ -116,7 +115,7 @@ class SarcasmDataset(Dataset):
         try:
             # Example OCR processing, should replace with actual OCR reader like EasyOCR
             logging.debug(f"Performing OCR for {image_path}")
-            ocr_results = easyocr.Reader(['vi', 'en'], gpu=False).readtext(image_path, detail=0)
+            ocr_results = easyocr.Reader(['vi', 'en'], gpu=True).readtext()
             raw_ocr = ' '.join(ocr_results).lower()
         except Exception as e:
             logging.error(f"OCR failed for image {image_path}: {e}")
@@ -233,10 +232,9 @@ class TestSarcasmDataset(Dataset):
         try:
             # Example OCR processing, should replace with actual OCR reader like EasyOCR
             logging.debug(f"Performing OCR for {image_path}")
-            ocr_results = easyocr.Reader(['vi', 'en'], gpu=False).readtext(image_path, detail=0)
+            ocr_results = easyocr.Reader(['vi', 'en'], gpu=True).readtext()
             raw_ocr = ' '.join(ocr_results).lower()
         except Exception as e:
-            logging.error("Performing OCR fail")
             logging.error(f"OCR failed for image {image_path}: {e}")
             raw_ocr = ""
         return raw_ocr
