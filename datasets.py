@@ -60,6 +60,7 @@ class BaseSarcasmDataset(Dataset):
             self.ocr_cache[image_path] = raw_ocr
             return raw_ocr
         except Exception as e:
+            logging.error(f'Performing OCR failed')
             logging.error(f"OCR failed for image {image_path}: {e}")
             return ""
 
