@@ -6,7 +6,7 @@ from tqdm import tqdm
 import json
 import logging
 
-def test_model(model, test_dataset, device, dataloader):
+def test_model(model, device, dataloader):
     model.eval()
     predictions = []
     

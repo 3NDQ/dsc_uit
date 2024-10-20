@@ -62,7 +62,7 @@ def run_test_multiple_models(test_json, test_image_folder, tokenizer, device,
         
         # Generate predictions
         try:
-            predictions = test_model(model, test_dataset, device, dataloader=test_dataloader)
+            predictions = test_model(model, device, test_dataloader)
             logging.info(f"Predictions generated successfully for model {idx+1}")
         except Exception as e:
             logging.error(f"Failed to generate predictions for model {idx+1}: {e}")
