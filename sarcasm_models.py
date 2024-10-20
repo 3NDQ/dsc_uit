@@ -11,7 +11,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         
         self.image_encoder = image_encoder
         self.text_encoder = text_encoder
-        
+        self.fusion_method = fusion_method
         # Multimodal Fusion
         combined_dim = self.image_encoder.config.hidden_size + self.text_encoder.config.hidden_size
         logging.info(f"Combined dimension: {combined_dim}")
