@@ -17,6 +17,7 @@
     --train_ocr_cache_path "train_ocr_cache.json"
 
 
+
 !CUDA_LAUNCH_BLOCKING=1 python main.py \
     --mode test \
     --text_encoder "vinai/phobert-base" \
@@ -24,7 +25,7 @@
     --tokenizer "vinai/phobert-base" \
     --test_json "/kaggle/input/vimmsd-training-dataset/vimmsd-public-test.json" \
     --test_image_folder "/kaggle/input/vimmsd-public-test/public-test-images/dev-images" \
-    --model_path "/kaggle/input/model_temp/pytorch/default/1/model_epoch_1.pth" \
+    --model_path "model_epoch_1.pth" \
     --batch_size 8 \
     --num_workers 4 \
     --fusion_method 'concat' \
