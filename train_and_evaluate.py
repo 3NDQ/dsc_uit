@@ -3,7 +3,8 @@ import logging
 import json
 import torch
 from torch.utils.data import DataLoader, Subset
-from utils import evaluate_model, train_model
+from utils import evaluate_model
+from train import train_model
 from datasets import SarcasmDataset
 from sarcasm_models import VietnameseSarcasmClassifier
 from sklearn.model_selection import train_test_split
