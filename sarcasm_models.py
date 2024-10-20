@@ -5,7 +5,7 @@ import torch.nn as nn
 import logging
 
 class VietnameseSarcasmClassifier(nn.Module):
-    def __init__(self, text_encoder, image_encoder, num_labels=4, fusion_method = 'concat'):
+    def __init__(self, text_encoder, image_encoder, fusion_method = 'concat', num_labels=4):
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
         

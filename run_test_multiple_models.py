@@ -38,7 +38,7 @@ def run_test_multiple_models(test_json, test_image_folder, tokenizer, device,
 
     # Initialize model with passed encoders
     try:
-        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method, num_labels=4).to(device)
+        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method).to(device)
     except Exception as e:
         logging.error(f"Failed to initialize the model: {e}")
         return

@@ -75,7 +75,7 @@ def train_and_evaluate(train_json, train_image_folder, tokenizer, device,
     
     # Initialize model with passed encoders
     try:
-        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method, num_labels=4).to(device)
+        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method).to(device)
         logging.info('Model initialized and moved to device')
     except Exception as e:
         logging.error(f"Failed to initialize the model: {e}")
