@@ -3,6 +3,15 @@
 from transformers import AutoModel, AutoTokenizer
 import logging
 
+def get_tokenizer(tokenizer_name):
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
+        logging.info(f"Loaded tokenizer: {tokenizer_name}")
+        return tokenizer
+    except Exception as e:
+        logging.error(f"Failed to load tokenizer '{tokenizer_name}': {e}")
+        raise e
+
 def get_text_encoder(model_name):
     try:
         text_encoder = AutoModel.from_pretrained(model_name)
@@ -33,13 +42,4 @@ def get_multimodal_model(model_name):
         raise
     except Exception as e:
         logging.error(f"Failed to load multimodal model '{model_name}': {e}")
-        raise e
-
-def get_tokenizer(tokenizer_name):
-    try:
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_name)
-        logging.info(f"Loaded tokenizer: {tokenizer_name}")
-        return tokenizer
-    except Exception as e:
-        logging.error(f"Failed to load tokenizer '{tokenizer_name}': {e}")
         raise e

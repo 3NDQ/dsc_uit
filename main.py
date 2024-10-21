@@ -14,8 +14,8 @@ def main():
         level=logging.INFO,
         format='%(asctime)s [%(levelname)s] %(message)s',
         handlers=[
-            logging.StreamHandler(sys.stdout),  # Explicitly use sys.stdout
-            logging.FileHandler("sarcasm_classifier.log")  # Optional: Log to a file
+            logging.StreamHandler(sys.stdout),  
+            logging.FileHandler("sarcasm_classifier.log")  
         ],
         force=True
     )
@@ -112,38 +112,38 @@ def main():
         train_and_evaluate(
             train_json=args.train_json,
             train_image_folder=args.train_image_folder,
-            tokenizer=tokenizer,
-            device=device,
-            num_epochs=args.num_epochs,
-            patience=args.patience,
-            batch_size=args.batch_size,
-            num_workers=args.num_workers,
+            active_ocr=args.active_ocr,
             use_train_ocr_cache=args.use_train_ocr_cache,
             train_ocr_cache_path=args.train_ocr_cache_path,
+            tokenizer=tokenizer,
             text_encoder=text_encoder,
             image_encoder=image_encoder,
+            device=device,
+            batch_size=args.batch_size,
+            num_workers=args.num_workers,
+            fusion_method =args.fusion_method,
+            num_epochs=args.num_epochs,
+            patience=args.patience,
             learning_rate=args.learning_rate,
             val_size=args.val_size,
-            fusion_method =args.fusion_method,
             random_state=args.random_state,
-            active_ocr=args.active_ocr
         )
    
     elif args.mode == 'test':
         run_test_multiple_models(
             test_json=args.test_json,
             test_image_folder=args.test_image_folder,
+            active_ocr=args.active_ocr,
+            use_test_ocr_cache=args.use_test_ocr_cache,
+            test_ocr_cache_path=args.test_ocr_cache_path, 
             tokenizer=tokenizer,
+            text_encoder=text_encoder,
+            image_encoder=image_encoder,
             device=device,
             batch_size=args.batch_size,
             num_workers=args.num_workers,
-            use_test_ocr_cache=args.use_test_ocr_cache,
-            test_ocr_cache_path=args.test_ocr_cache_path,
-            model_paths=args.model_paths,  
-            text_encoder=text_encoder,
-            fusion_method = args.fusion_method,
-            image_encoder=image_encoder,
-            active_ocr=args.active_ocr
+            model_paths=args.model_paths,
+            fusion_method = args.fusion_method
         )
 
 if __name__ == "__main__":
