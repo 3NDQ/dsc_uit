@@ -1,4 +1,5 @@
-# # train.py 
+# train.py 
+import os
 import torch
 from transformers import get_linear_schedule_with_warmup
 from utils import EarlyStopping
@@ -78,26 +79,32 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         precision = precision_score(all_labels, all_preds, average='macro')
         recall = recall_score(all_labels, all_preds, average='macro')
         logging.info(f"Epoch {epoch+1}/{num_epochs} - F1 Score: {f1:.4f} - Precision: {precision:.4f} - Recall: {recall:.4f}")
-        
-        # Check for improvement and save top 5 models based on F1 score
+
+        model_file = f"model_epoch_{epoch+1}.pth"
         if len(best_models) < 5:
             # If we don't have 5 models yet, always push the current one
-            heapq.heappush(best_models, (f1, epoch, model.state_dict()))
+            heapq.heappush(best_models, (f1, epoch, model_file))
             
-            # Save the model with a consistent name for the position (best_model_X.pth)
-            torch.save(model.state_dict(), f"best_model_{len(best_models)}.pth")
-            logging.info(f"Model saved as best_model_{len(best_models)}.pth at epoch {epoch+1}")
+            # Save the current model with the epoch number
+            torch.save(model.state_dict(), model_file)
+            logging.info(f"Model saved as {model_file} at epoch {epoch+1}")
+            
         else:
             # Save the model only if its F1 score is better than the lowest one in the heap
             if f1 > best_models[0][0]:
                 # Find the model being replaced (which has the lowest F1 score)
-                _, replaced_epoch, _ = heapq.heappop(best_models)
+                _, replaced_epoch, replaced_model_file = heapq.heappop(best_models)
+                
+                # Delete the replaced model's file
+                if os.path.exists(replaced_model_file):
+                    os.remove(replaced_model_file)
+                    logging.info(f"Model from epoch {replaced_epoch+1} deleted: {replaced_model_file}")
                 
                 # Push the new model into the top 5
-                heapq.heappush(best_models, (f1, epoch, model.state_dict()))
+                heapq.heappush(best_models, (f1, epoch, model_file))
                 
-                # Overwrite the replaced model's file with the new model
-                torch.save(model.state_dict(), f"best_model_{best_models.index((f1, epoch, model.state_dict())) + 1}.pth")
+                # Save the new model with the epoch number
+                torch.save(model.state_dict(), model_file)
                 logging.info(f"Model from epoch {epoch+1} saved, replacing the model from epoch {replaced_epoch+1}")
 
         
