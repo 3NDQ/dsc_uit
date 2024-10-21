@@ -81,15 +81,25 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         
         # Check for improvement and save top 5 models based on F1 score
         if len(best_models) < 5:
-            heapq.heappush(best_models, (f1, epoch, model.state_dict()))  # Store model with F1 score
-            torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pth")
-            logging.info(f"Model saved at epoch {epoch+1}")
+            # If we don't have 5 models yet, always push the current one
+            heapq.heappush(best_models, (f1, epoch, model.state_dict()))
+            
+            # Save the model with a consistent name for the position (best_model_X.pth)
+            torch.save(model.state_dict(), f"best_model_{len(best_models)}.pth")
+            logging.info(f"Model saved as best_model_{len(best_models)}.pth at epoch {epoch+1}")
         else:
-            # Save the model if its F1 score is better than the lowest one in the heap
+            # Save the model only if its F1 score is better than the lowest one in the heap
             if f1 > best_models[0][0]:
-                heapq.heapreplace(best_models, (f1, epoch, model.state_dict()))
-                torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pth")
-                logging.info(f"Model saved at epoch {epoch+1}")
+                # Find the model being replaced (which has the lowest F1 score)
+                _, replaced_epoch, _ = heapq.heappop(best_models)
+                
+                # Push the new model into the top 5
+                heapq.heappush(best_models, (f1, epoch, model.state_dict()))
+                
+                # Overwrite the replaced model's file with the new model
+                torch.save(model.state_dict(), f"best_model_{best_models.index((f1, epoch, model.state_dict())) + 1}.pth")
+                logging.info(f"Model from epoch {epoch+1} saved, replacing the model from epoch {replaced_epoch+1}")
+
         
         # Early stopping check based on validation loss
         early_stopping(avg_val_loss)
