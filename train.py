@@ -7,7 +7,6 @@ import logging
 from tqdm import tqdm
 import heapq  
 from sklearn.metrics import f1_score, precision_score, recall_score
-import numpy as np
 
 def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate):
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)

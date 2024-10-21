@@ -1,7 +1,6 @@
 # test.py (Ensure no redundant encoder/tokenizer initialization)
 
 import torch
-from torch.utils.data import DataLoader
 from tqdm import tqdm
 def test_model(model, device, dataloader):
     model.eval()

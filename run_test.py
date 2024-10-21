@@ -3,7 +3,7 @@ import logging
 import torch
 import os
 import json
-from datasets import TestSarcasmDataset
+from process_datasets import TestSarcasmDataset
 from torch.utils.data import DataLoader
 from test import test_model
 from sarcasm_models import VietnameseSarcasmClassifier

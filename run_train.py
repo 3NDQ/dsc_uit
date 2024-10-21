@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader, Subset
 from utils import evaluate_model
 from train import train_model
-from datasets import TrainSarcasmDataset
+from process_datasets import TrainSarcasmDataset
 from sarcasm_models import VietnameseSarcasmClassifier
 from sklearn.model_selection import train_test_split
 

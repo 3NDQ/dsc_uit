@@ -6,8 +6,8 @@ import argparse
 import sys
 import logging
 from model_factory import get_text_encoder, get_image_encoder, get_tokenizer  
-from train_and_evaluate import train_and_evaluate  
-from run_test_multiple_models import run_test_multiple_models 
+from run_train import train_and_evaluate  
+from run_test import run_test_multiple_models 
 
 def main():
     logging.basicConfig(
@@ -75,7 +75,6 @@ def main():
             if not os.path.isfile(model_path):
                 parser.error(f"Model file not found at {model_path}")
 
-    
     # Initialize tokenizer using factory function
     try:
         tokenizer = get_tokenizer(args.tokenizer)
