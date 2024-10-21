@@ -75,7 +75,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         avg_val_loss = val_loss / len(val_dataloader) if len(val_dataloader) > 0 else 0
         logging.info(f"Epoch {epoch+1}/{num_epochs} - Val Loss: {avg_val_loss:.4f}")
         
-        # Tính F1, Precision, Recall cho từng lớp và tổng thể
+        # Calculate F1, Precision, Recall for each class and overall
         f1 = f1_score(all_labels, all_preds, average='macro')
         precision = precision_score(all_labels, all_preds, average='macro')
         recall = recall_score(all_labels, all_preds, average='macro')
