@@ -6,7 +6,6 @@ import json
 from tqdm import tqdm
 from process_datasets import TestSarcasmDataset
 from torch.utils.data import DataLoader
-from test import test_model
 from sarcasm_models import VietnameseSarcasmClassifier
 
 
