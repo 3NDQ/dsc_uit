@@ -57,7 +57,7 @@ def main():
     parser.add_argument('--val_size', type=float, default=0.2, help='Val size for train test split')
     parser.add_argument('--random_state', type=int, default=42, help='Random state')
     parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention'], help='Method to fuse features: concat (default) or attention')
-    parser.add_argument('--active_ocr', type=str, default=True, choices=[True, False], help='Active combine or not combine ocr and text')
+    parser.add_argument('--active_ocr', type=bool, default=True, choices=[True, False], help='Active combine or not combine ocr and text')
     args = parser.parse_args()
     
     # Validate paths1411
