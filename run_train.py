@@ -3,6 +3,7 @@ import logging
 import json
 import torch
 import heapq  
+import os
 from torch.cuda import amp
 from torch.utils.data import DataLoader, Subset
 from utils import evaluate_model, EarlyStopping
@@ -98,7 +99,6 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
             if f1 > best_models[0][0]:
                 # Find the model being replaced (which has the lowest F1 score)
                 _, replaced_epoch, replaced_model_file = heapq.heappop(best_models)
-                
                 # Delete the replaced model's file
                 if os.path.exists(replaced_model_file):
                     os.remove(replaced_model_file)
