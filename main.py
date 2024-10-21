@@ -58,6 +58,7 @@ def main():
     parser.add_argument('--random_state', type=int, default=42, help='Random state')
     parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention'], help='Method to fuse features: concat (default) or attention')
     parser.add_argument('--active_ocr', type=bool, default=True, choices=[True, False], help='Active combine or not combine ocr and text')
+    
     args = parser.parse_args()
     
     # Validate paths1411
@@ -132,7 +133,6 @@ def main():
         run_test_multiple_models(
             test_json=args.test_json,
             test_image_folder=args.test_image_folder,
-            active_ocr=args.active_ocr,
             use_test_ocr_cache=args.use_test_ocr_cache,
             test_ocr_cache_path=args.test_ocr_cache_path, 
             tokenizer=tokenizer,
