@@ -88,7 +88,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         model_file = f"model_epoch_{epoch+1}.pth"
         if len(best_models) < 5:
             # If we don't have 5 models yet, always push the current one
-            heapq.heappush(best_models, (f1, epoch, model_file))
+            heapq.heappush(best_models, (f1, epoch, model_file, model.state_dict()))
             
             # Save the current model with the epoch number
             torch.save(model.state_dict(), model_file)
@@ -105,7 +105,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
                     logging.info(f"Model from epoch {replaced_epoch+1} deleted: {replaced_model_file}")
                 
                 # Push the new model into the top 5
-                heapq.heappush(best_models, (f1, epoch, model_file))
+                heapq.heappush(best_models, (f1, epoch, model_file, model.state_dict()))
                 
                 # Save the new model with the epoch number
                 torch.save(model.state_dict(), model_file)
@@ -119,9 +119,9 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
             break
     
     # Load the best model based on F1 score
-    best_f1, best_epoch, best_model_state = max(best_models, key=lambda x: x[0])
+    best_f1, best_epoch, best_model_file, best_model_state = max(best_models, key=lambda x: x[0])
     model.load_state_dict(best_model_state)
-    logging.info(f"Best model from epoch {best_epoch+1} with F1 score {best_f1:.4f} loaded.")
+    logging.info(f"Best model ({best_model_file}) from epoch {best_epoch+1} with F1 score {best_f1:.4f} loaded.")
     
     return model
 
