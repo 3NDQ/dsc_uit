@@ -3,10 +3,26 @@ import logging
 import torch
 import os
 import json
+from tqdm import tqdm
 from process_datasets import TestSarcasmDataset
 from torch.utils.data import DataLoader
 from test import test_model
 from sarcasm_models import VietnameseSarcasmClassifier
+
+
+def test_model(model, device, dataloader):
+    model.eval()
+    predictions = []
+    
+    with torch.no_grad():
+        for batch in tqdm(dataloader, desc="Testing", leave=False):
+            batch = {k: v.to(device) for k, v in batch.items()}
+            outputs = model(**batch)
+            logits = outputs['logits'] if isinstance(outputs, dict) else outputs
+            preds = torch.argmax(logits, dim=1)
+            predictions.extend(preds.cpu().numpy())
+    
+    return predictions
 
 def run_test_multiple_models(test_json, test_image_folder, tokenizer, device, 
                             batch_size, num_workers, 
