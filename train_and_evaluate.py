@@ -93,17 +93,16 @@ def train_and_evaluate(train_json, train_image_folder, tokenizer, device,
     )
     logging.info('Model training complete')
     
-    # Save the trained model
-    try:
-        torch.save(model.state_dict(), 'sarcasm_classifier_model.pth')
-        logging.info('Model saved as sarcasm_classifier_model.pth')
-    except Exception as e:
-        logging.error(f"Failed to save model: {e}")
+    # # Save the trained model
+    # try:
+    #     torch.save(model.state_dict(), 'sarcasm_classifier_model.pth')
+    #     logging.info('Model saved as sarcasm_classifier_model.pth')
+    # except Exception as e:
+    #     logging.error(f"Failed to save model: {e}")
     
     # Evaluate the model on validation set
     try:
         metrics = evaluate_model(model, val_dataloader, device)
-        loss = metrics['loss']
     except Exception as e:
         logging.error(f"Failed to evaluate model: {e}")
         return
