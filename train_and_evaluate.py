@@ -5,14 +5,14 @@ import torch
 from torch.utils.data import DataLoader, Subset
 from utils import evaluate_model
 from train import train_model
-from datasets import SarcasmDataset
+from datasets import TrainSarcasmDataset
 from sarcasm_models import VietnameseSarcasmClassifier
 from sklearn.model_selection import train_test_split
 
 def train_and_evaluate(train_json, train_image_folder, tokenizer, device, 
                       num_epochs, patience, batch_size, num_workers, train_ocr_cache_path,
                       text_encoder, image_encoder, learning_rate, 
-                      val_size, random_state, fusion_method, use_train_ocr_cache=False):
+                      val_size, random_state, fusion_method, use_train_ocr_cache=False, active_ocr=True):
     logging.info("Starting training and evaluation...")
     
     # Load JSON data
@@ -25,12 +25,13 @@ def train_and_evaluate(train_json, train_image_folder, tokenizer, device,
         return
     
     # Create dataset with OCR caching parameters
-    dataset = SarcasmDataset(
+    dataset = TrainSarcasmDataset(
         data=data, 
         image_folder=train_image_folder, 
         text_tokenizer=tokenizer, 
         use_ocr_cache=use_train_ocr_cache, 
-        ocr_cache_path=train_ocr_cache_path
+        ocr_cache_path=train_ocr_cache_path,
+        active_ocr=active_ocr
     )
     
     # Extract labels for stratified splitting

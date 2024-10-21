@@ -3,9 +3,6 @@
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-import json
-import logging
-
 def test_model(model, device, dataloader):
     model.eval()
     predictions = []

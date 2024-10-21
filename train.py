@@ -1,12 +1,11 @@
 # # train.py 
 import torch
-from torch.utils.data import DataLoader
 from transformers import get_linear_schedule_with_warmup
 from utils import EarlyStopping
 from torch.cuda import amp
 import logging
 from tqdm import tqdm
-import heapq  # Để lưu 5 mô hình tốt nhất
+import heapq  
 from sklearn.metrics import f1_score, precision_score, recall_score
 import numpy as np
 

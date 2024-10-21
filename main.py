@@ -57,6 +57,7 @@ def main():
     parser.add_argument('--val_size', type=float, default=0.2, help='Val size for train test split')
     parser.add_argument('--random_state', type=int, default=42, help='Random state')
     parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention'], help='Method to fuse features: concat (default) or attention')
+    parser.add_argument('--active_ocr', type=str, default=True, choices=[True, False], help='Active combine or not combine ocr and text')
     args = parser.parse_args()
     
     # Validate paths1411
@@ -91,17 +92,18 @@ def main():
         return
     
     # Add special tokens to tokenizer
-    special_tokens = {"additional_special_tokens": ["[OCR]", "[CAPTION]"]}
-    tokenizer.add_special_tokens(special_tokens)
-    logging.info("Tokenizer special tokens added.")
+    if args.active_ocr == True:
+        special_tokens = {"additional_special_tokens": ["[OCR]", "[CAPTION]"]}
+        tokenizer.add_special_tokens(special_tokens)
+        logging.info("Tokenizer special tokens added.")
     
-    # Resize token embeddings to accommodate new tokens
-    try:
-        text_encoder.resize_token_embeddings(len(tokenizer))
-        logging.info("Token embeddings resized to accommodate new tokens.")
-    except Exception as e:
-        logging.error(f"Failed to resize token embeddings: {e}")
-        return
+        # Resize token embeddings to accommodate new tokens
+        try:
+            text_encoder.resize_token_embeddings(len(tokenizer))
+            logging.info("Token embeddings resized to accommodate new tokens.")
+        except Exception as e:
+            logging.error(f"Failed to resize token embeddings: {e}")
+            return
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logging.info(f"Using device: {device}")
@@ -122,8 +124,9 @@ def main():
             image_encoder=image_encoder,
             learning_rate=args.learning_rate,
             val_size=args.val_size,
-            fusion_method = args.fusion_method,
-            random_state= args.random_state
+            fusion_method =args.fusion_method,
+            random_state=args.random_state,
+            active_ocr=args.active_ocr
         )
    
     elif args.mode == 'test':
@@ -139,7 +142,8 @@ def main():
             model_paths=args.model_paths,  
             text_encoder=text_encoder,
             fusion_method = args.fusion_method,
-            image_encoder=image_encoder
+            image_encoder=image_encoder,
+            active_ocr=args.active_ocr
         )
 
 if __name__ == "__main__":

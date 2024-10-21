@@ -9,13 +9,14 @@ import torch
 
 
 class BaseSarcasmDataset(Dataset):
-    def __init__(self, image_folder, text_tokenizer, max_length=256, use_ocr_cache=False, ocr_cache_path=None):
+    def __init__(self, image_folder, text_tokenizer, max_length=256, use_ocr_cache=False, ocr_cache_path=None, active_ocr=True):
         self.image_folder = image_folder
         self.text_tokenizer = text_tokenizer
         self.max_length = max_length
         self.use_ocr_cache = use_ocr_cache
         self.ocr_cache_path = ocr_cache_path
         self.ocr_cache = self._load_ocr_cache()
+        self.active_ocr = active_ocr
 
         # Image transformation
         self.image_transform = transforms.Compose([
@@ -63,9 +64,9 @@ class BaseSarcasmDataset(Dataset):
                 logging.error(f"Failed to save OCR cache to {self.ocr_cache_path}: {e}")
 
 
-class SarcasmDataset(BaseSarcasmDataset):
-    def __init__(self, data, image_folder, text_tokenizer, max_length=256, use_ocr_cache=False, ocr_cache_path='ocr_cache.json'):
-        super().__init__(image_folder, text_tokenizer, max_length, use_ocr_cache, ocr_cache_path)
+class TrainSarcasmDataset(BaseSarcasmDataset):
+    def __init__(self, data, image_folder, text_tokenizer, max_length=256, use_ocr_cache=False, ocr_cache_path='ocr_cache.json', active_ocr=True):
+        super().__init__(image_folder, text_tokenizer, max_length, use_ocr_cache, ocr_cache_path, active_ocr)
         self.data = list(data.values()) if isinstance(data, dict) else data
         self.label_to_id = {
             'multi-sarcasm': 0, 
@@ -90,7 +91,11 @@ class SarcasmDataset(BaseSarcasmDataset):
         image = self._load_image(image_path)
 
         # Process Text
-        combined_text = f"[CAPTION] {item['caption'].lower()} [OCR] {raw_ocr}"
+        if self.active_ocr:
+            combined_text = f"[CAPTION] {item['caption'].lower()} [OCR] {raw_ocr}"
+        else:
+            combined_text = item['caption'].lower()
+
         encoded_text = self.text_tokenizer(
             combined_text, 
             padding='max_length', 
@@ -109,8 +114,8 @@ class SarcasmDataset(BaseSarcasmDataset):
 
 
 class TestSarcasmDataset(BaseSarcasmDataset):
-    def __init__(self, json_data_path, image_folder, text_tokenizer, max_length=256, use_ocr_cache=False, ocr_cache_path='test_ocr_cache.json'):
-        super().__init__(image_folder, text_tokenizer, max_length, use_ocr_cache, ocr_cache_path)
+    def __init__(self, json_data_path, image_folder, text_tokenizer, max_length=256, use_ocr_cache=False, ocr_cache_path='test_ocr_cache.json', active_ocr=True):
+        super().__init__(image_folder, text_tokenizer, max_length, use_ocr_cache, ocr_cache_path, active_ocr)
 
         # Load test JSON data
         try:
@@ -137,7 +142,11 @@ class TestSarcasmDataset(BaseSarcasmDataset):
         image = self._load_image(image_path)
 
         # Process Text
-        combined_text = f"[CAPTION] {item['caption'].lower()} [OCR] {raw_ocr}"
+        if self.active_ocr:
+            combined_text = f"[CAPTION] {item['caption'].lower()} [OCR] {raw_ocr}"
+        else:
+            combined_text = item['caption'].lower()
+
         encoded_text = self.text_tokenizer(
             combined_text, 
             padding='max_length', 
