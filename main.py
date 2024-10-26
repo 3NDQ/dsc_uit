@@ -50,9 +50,9 @@ def main():
     parser.add_argument('--test_ocr_cache_path', type=str, default='test_ocr_cache.json', help='Path to store or load test OCR cache')
 
     # Training hyperparameters
-    parser.add_argument('--num_epochs', type=int, default=50, help='Number of training epochs')
+    parser.add_argument('--num_epochs', type=int, default=20, help='Number of training epochs')
     parser.add_argument('--patience', type=int, default=10, help='Patience for early stopping')
-    parser.add_argument('--learning_rate', type=float, default=2e-5, help='Learning rate for the optimizer')
+    parser.add_argument('--learning_rate', type=float, default=3e-5, help='Learning rate for the optimizer')
     parser.add_argument('--val_size', type=float, default=0.2, help='Val size for train test split')
     parser.add_argument('--random_state', type=int, default=42, help='Random state')
     parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention'], help='Method to fuse features: concat (default) or attention')

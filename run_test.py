@@ -5,7 +5,7 @@ import os
 import json
 from process_datasets import TestSarcasmDataset
 from torch.utils.data import DataLoader
-from sarcasm_models import VietnameseSarcasmClassifier
+from sarcasm_model import VietnameseSarcasmClassifier
 from tqdm import tqdm
 
 def test_model(model, device, dataloader):

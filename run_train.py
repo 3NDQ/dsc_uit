@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import DataLoader, Subset
 from utils import evaluate_model
 from process_datasets import TrainSarcasmDataset
-from sarcasm_models import VietnameseSarcasmClassifier
+from sarcasm_model import VietnameseSarcasmClassifier
 from sklearn.model_selection import train_test_split
 from transformers import get_linear_schedule_with_warmup
 from utils import EarlyStopping
