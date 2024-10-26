@@ -35,7 +35,7 @@ def run_test(test_json, test_image_folder, tokenizer, device,
 
     # Create test dataset with OCR caching parameters
     test_dataset = TestSarcasmDataset(
-        data=test_json, 
+        data_path=test_json, 
         image_folder=test_image_folder, 
         text_tokenizer=tokenizer, 
         use_ocr_cache=use_test_ocr_cache, 

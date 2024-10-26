@@ -116,18 +116,9 @@ def run_train(train_json, train_image_folder, tokenizer, device,
                       val_size, random_state, fusion_method, use_train_ocr_cache=False, active_ocr=True):
     logging.info("Starting training and evaluation...")
     
-    # Load JSON data
-    try:
-        with open(train_json, 'r', encoding='utf-8') as f:
-            data = json.load(f)
-        logging.info(f"Training data loaded from {train_json}")
-    except Exception as e:
-        logging.error(f"Failed to load training data from {train_json}: {e}")
-        return
-    
     # Create dataset with OCR caching parameters
     dataset = TrainSarcasmDataset(
-        data=data, 
+        data_path=train_json, 
         image_folder=train_image_folder, 
         text_tokenizer=tokenizer, 
         use_ocr_cache=use_train_ocr_cache, 

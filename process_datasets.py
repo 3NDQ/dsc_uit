@@ -1,4 +1,4 @@
-#process_data.py
+# process_data.py
 import os
 import json
 import logging
@@ -9,7 +9,7 @@ import easyocr
 import torch
 
 class BaseSarcasmDataset(Dataset):
-    def __init__(self, data, image_folder, text_tokenizer, 
+    def __init__(self, data_path, image_folder, text_tokenizer, 
                  use_ocr_cache=False, active_ocr=True, ocr_cache_path=None, max_length=256):
         self.image_folder = image_folder
         self.text_tokenizer = text_tokenizer
@@ -19,7 +19,7 @@ class BaseSarcasmDataset(Dataset):
         self.active_ocr = active_ocr
         self.ocr_cache = self._load_ocr_cache()
         self.ocr_reader = easyocr.Reader(['vi', 'en'], gpu=True)
-        self.data = self._load_data(data)
+        self.data = self._load_data(data_path)
 
         # Image transformation
         self.image_transform = transforms.Compose([
@@ -71,16 +71,19 @@ class BaseSarcasmDataset(Dataset):
             except Exception as e:
                 logging.error(f"Failed to save OCR cache to {self.ocr_cache_path}: {e}")
 
-    def _load_data(self, data):
-        # Nếu `data` là đường dẫn (chuỗi), tải dữ liệu từ tệp JSON
-        if isinstance(data, str):
+    def _load_data(self, data_path):
+        # Đọc dữ liệu từ đường dẫn tệp JSON
+        if isinstance(data_path, str) and os.path.isfile(data_path):
             try:
-                with open(data, 'r', encoding='utf-8') as f:
+                with open(data_path, 'r', encoding='utf-8') as f:
                     data = list(json.load(f).values())
-                logging.info(f"Data loaded from {data}")
+                logging.info(f"Data loaded from {data_path}")
             except Exception as e:
-                logging.error(f"Failed to load data from {data}: {e}")
+                logging.error(f"Failed to load data from {data_path}: {e}")
                 data = []
+        else:
+            logging.error("Provided data_path is not a valid path to a JSON file.")
+            data = []
         return data
 
     def __len__(self):
@@ -115,8 +118,8 @@ class BaseSarcasmDataset(Dataset):
         }
 
 class TrainSarcasmDataset(BaseSarcasmDataset):
-    def _load_data(self, data):
-        data = super()._load_data(data)
+    def _load_data(self, data_path):
+        data = super()._load_data(data_path)
         label_to_id = {
             'multi-sarcasm': 0, 
             'text-sarcasm': 1, 
@@ -124,9 +127,11 @@ class TrainSarcasmDataset(BaseSarcasmDataset):
             'not-sarcasm': 3,
         }
         for item in data:
-            item['label_id'] = label_to_id.get(item['label'], 3)
+            if isinstance(item, dict) and 'label' in item:
+                item['label_id'] = label_to_id.get(item['label'], 3)
+            else:
+                logging.warning("Skipping an item due to unexpected structure.")
         return data
 
 class TestSarcasmDataset(BaseSarcasmDataset):
     pass
-
