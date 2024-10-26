@@ -110,7 +110,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     
     return model
 
-def train_and_evaluate(train_json, train_image_folder, tokenizer, device, 
+def run_train(train_json, train_image_folder, tokenizer, device, 
                       num_epochs, patience, batch_size, num_workers, train_ocr_cache_path,
                       text_encoder, image_encoder, learning_rate, 
                       val_size, random_state, fusion_method, use_train_ocr_cache=False, active_ocr=True):
@@ -204,25 +204,10 @@ def train_and_evaluate(train_json, train_image_folder, tokenizer, device,
     
     # Evaluate the model on validation set
     try:
-        metrics = evaluate_model(model, val_dataloader, device)
-        loss = metrics['loss']
+        evaluate_model(model, val_dataloader, device)
     except Exception as e:
         logging.error(f"Failed to evaluate model: {e}")
         return
-    
-    # Print evaluation metrics
-    logging.info("Validation Metrics:")
-    logging.info(f"Overall F1 Score: {metrics['overall_f1']:.4f}")
-    logging.info(f"Overall Precision: {metrics['overall_precision']:.4f}")
-    logging.info(f"Overall Recall: {metrics['overall_recall']:.4f}")
-    logging.info(f"Accuracy: {metrics['accuracy']:.4f}")
-    
-    logging.info("\nClass-wise Metrics:")
-    for class_name, class_metrics in metrics['class_metrics'].items():
-        logging.info(f"{class_name}:")
-        logging.info(f"  Precision: {class_metrics['precision']:.4f}")
-        logging.info(f"  Recall: {class_metrics['recall']:.4f}")
-        logging.info(f"  F1 Score: {class_metrics['f1']:.4f}")
     
     # Save OCR cache explicitly
     try:

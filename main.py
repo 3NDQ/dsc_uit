@@ -1,13 +1,12 @@
-# main.py (Updated Sections)
-
+# main.py 
 import os
 import torch
 import argparse
 import sys
 import logging
 from model_factory import get_text_encoder, get_image_encoder, get_tokenizer  
-from run_train import train_and_evaluate  
-from run_test import run_test_multiple_models 
+from run_train import run_train
+from run_test import run_test
 
 def main():
     logging.basicConfig(
@@ -36,7 +35,7 @@ def main():
     # Testing arguments
     parser.add_argument('--test_json', type=str, default='/kaggle/input/vimmsd-public-test/vimmsd-public-test.json', help='Path to the testing JSON file')
     parser.add_argument('--test_image_folder', type=str, default='/kaggle/input/vimmsd-public-test/public-test-images/dev-images', help='Path to the testing images folder')
-    parser.add_argument('--model_paths', type=str, nargs='+', default=['model_epoch_1.pth'], required=False, help='Paths to trained models')
+    parser.add_argument('--model_paths', type=str, nargs='+', default=['model_epoch_1.pth'], help='Paths to trained models')
     
     # Common arguments
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size for training and testing')
@@ -57,11 +56,12 @@ def main():
     parser.add_argument('--val_size', type=float, default=0.2, help='Val size for train test split')
     parser.add_argument('--random_state', type=int, default=42, help='Random state')
     parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention'], help='Method to fuse features: concat (default) or attention')
-    parser.add_argument('--active_ocr', type=bool, default=True, choices=[True, False], help='Active combine or not combine ocr and text')
+    parser.add_argument('--active_ocr', action='store_true', help='Enable combining OCR and text')
+
     
     args = parser.parse_args()
     
-    # Validate paths1411
+    # Validate paths
     if args.mode == 'train':
         if not os.path.isfile(args.train_json):
             parser.error(f"Training JSON file not found at {args.train_json}")
@@ -72,6 +72,8 @@ def main():
             parser.error(f"Testing JSON file not found at {args.test_json}")
         if not os.path.isdir(args.test_image_folder):
             parser.error(f"Testing image folder not found at {args.test_image_folder}")
+        if not args.model_paths:
+            parser.error("No model paths provided for testing.")
         for model_path in args.model_paths:
             if not os.path.isfile(model_path):
                 parser.error(f"Model file not found at {model_path}")
@@ -92,7 +94,7 @@ def main():
         return
     
     # Add special tokens to tokenizer
-    if args.active_ocr == True:
+    if args.active_ocr:
         special_tokens = {"additional_special_tokens": ["[OCR]", "[CAPTION]"]}
         tokenizer.add_special_tokens(special_tokens)
         logging.info("Tokenizer special tokens added.")
@@ -109,7 +111,7 @@ def main():
     logging.info(f"Using device: {device}")
     
     if args.mode == 'train':
-        train_and_evaluate(
+        run_train(
             train_json=args.train_json,
             train_image_folder=args.train_image_folder,
             active_ocr=args.active_ocr,
@@ -130,9 +132,10 @@ def main():
         )
    
     elif args.mode == 'test':
-        run_test_multiple_models(
+        run_test(
             test_json=args.test_json,
             test_image_folder=args.test_image_folder,
+            active_ocr=args.active_ocr,
             use_test_ocr_cache=args.use_test_ocr_cache,
             test_ocr_cache_path=args.test_ocr_cache_path, 
             tokenizer=tokenizer,

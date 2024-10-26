@@ -1,5 +1,4 @@
 # model_factory.py
-
 from transformers import AutoModel, AutoTokenizer
 import logging
 
@@ -30,16 +29,3 @@ def get_image_encoder(model_name):
         logging.error(f"Failed to load image encoder '{model_name}': {e}")
         raise e
 
-def get_multimodal_model(model_name):
-    try:
-        # Example for VisoBertModel; replace with actual multimodal model class
-        from transformers import VisoBertModel  # Ensure this class exists or adjust accordingly
-        multimodal_model = VisoBertModel.from_pretrained(model_name)
-        logging.info(f"Loaded multimodal model: {model_name}")
-        return multimodal_model
-    except ImportError:
-        logging.error("VisoBertModel not found in transformers. Ensure you have the correct class or adjust the import.")
-        raise
-    except Exception as e:
-        logging.error(f"Failed to load multimodal model '{model_name}': {e}")
-        raise e

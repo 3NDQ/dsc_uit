@@ -49,10 +49,11 @@ def evaluate_model(model, dataloader, device):
             all_preds.extend(preds.cpu().numpy())
             all_labels.extend(batch['labels'].cpu().numpy())
     
-    # Calculate metrics for each class
+    # Define class labels
     labels = ['multi-sarcasm', 'text-sarcasm', 'image-sarcasm', 'not-sarcasm']
-    metrics = {}
     
+    # Calculate and log metrics for each class
+    logging.info("\nClass-wise Metrics:")
     for i, label in enumerate(labels):
         y_true = [1 if l == i else 0 for l in all_labels]
         y_pred = [1 if p == i else 0 for p in all_preds]
@@ -60,29 +61,24 @@ def evaluate_model(model, dataloader, device):
         precision, recall, f1, _ = precision_recall_fscore_support(
             y_true, y_pred, average='binary', zero_division=0
         )
-        metrics[label] = {
-            'precision': precision,
-            'recall': recall,
-            'f1': f1
-        }
-        logging.debug(f"Metrics for {label}: Precision={precision}, Recall={recall}, F1={f1}")
+        
+        logging.info(f"{label}:")
+        logging.info(f"  Precision: {precision:.4f}")
+        logging.info(f"  Recall: {recall:.4f}")
+        logging.info(f"  F1 Score: {f1:.4f}")
     
-    # Overall metrics
+    # Calculate overall metrics
     overall_acc = accuracy_score(all_labels, all_preds)
     overall_precision, overall_recall, overall_f1, _ = precision_recall_fscore_support(
         all_labels, all_preds, average='macro', zero_division=0
     )
     
-    logging.info(f"Overall Accuracy: {overall_acc:.4f}")
+    # Log overall metrics
+    logging.info(f"\nOverall Accuracy: {overall_acc:.4f}")
     logging.info(f"Overall Precision: {overall_precision:.4f}")
     logging.info(f"Overall Recall: {overall_recall:.4f}")
     logging.info(f"Overall F1 Score: {overall_f1:.4f}")
     
-    return {
-        'loss': total_loss / len(dataloader) if len(dataloader) > 0 else 0,
-        'accuracy': overall_acc,
-        'overall_precision': overall_precision,
-        'overall_recall': overall_recall,
-        'overall_f1': overall_f1,
-        'class_metrics': metrics
-    }
+    # Calculate and log average loss
+    average_loss = total_loss / len(dataloader) if len(dataloader) > 0 else 0
+    logging.info(f"Average Loss: {average_loss:.4f}")

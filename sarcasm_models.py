@@ -1,5 +1,4 @@
-# sarcasm_models.py (No changes needed if already accepting encoders as parameters)
-
+# sarcasm_models.py
 import torch
 import torch.nn as nn
 import logging

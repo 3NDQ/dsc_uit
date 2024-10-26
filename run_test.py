@@ -23,10 +23,10 @@ def test_model(model, device, dataloader):
     return predictions
 
 
-def run_test_multiple_models(test_json, test_image_folder, tokenizer, device, 
+def run_test(test_json, test_image_folder, tokenizer, device, 
                             batch_size, num_workers, 
                             test_ocr_cache_path, model_paths, 
-                            text_encoder, image_encoder, fusion_method, use_test_ocr_cache=False):
+                            text_encoder, image_encoder, fusion_method, use_test_ocr_cache=False, active_ocr=True):
     if model_paths is None:
         logging.error("No model paths were provided, using default.")
     else:
@@ -35,11 +35,12 @@ def run_test_multiple_models(test_json, test_image_folder, tokenizer, device,
 
     # Create test dataset with OCR caching parameters
     test_dataset = TestSarcasmDataset(
-        json_data_path=test_json, 
+        data=test_json, 
         image_folder=test_image_folder, 
         text_tokenizer=tokenizer, 
         use_ocr_cache=use_test_ocr_cache, 
-        ocr_cache_path=test_ocr_cache_path
+        ocr_cache_path=test_ocr_cache_path,
+        active_ocr=active_ocr
     )
     
     # Create DataLoader
