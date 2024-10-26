@@ -1,4 +1,5 @@
 # DSC-UIT
+- Vào mục run_notebook để lấy 2 file finetune_dsc.ipynb, import predict.ipynb
 - Sử dụng kaggle
 - Tạo 1 kaggle notebook train rồi import finetune_dsc.ipynb vào.
 - Tạo thêm 1 kaggle notebook test rồi import predict.ipynb vào.
