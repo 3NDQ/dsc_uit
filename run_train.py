@@ -24,7 +24,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     )
     
     early_stopping = EarlyStopping(patience=patience)
-    scaler = amp.GradScaler()  # For mixed precision training
+    scaler = torch.amp.GradScaler()  # For mixed precision training
     
     best_models = []  # List to store the top 5 models based on F1 score
     
