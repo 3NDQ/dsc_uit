@@ -1,6 +1,5 @@
 # #run_train.py
 import logging
-import json
 import torch
 from torch.utils.data import DataLoader, Subset
 from utils import evaluate_model
@@ -12,7 +11,8 @@ from utils import EarlyStopping
 from torch.cuda import amp
 from tqdm import tqdm
 import heapq  
-from sklearn.metrics import f1_score, precision_score, recall_score
+import os  
+from utils import evaluate_model  
 
 def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate):
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
@@ -54,61 +54,42 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         avg_train_loss = total_loss / len(train_dataloader) if len(train_dataloader) > 0 else 0
         logging.info(f"Epoch {epoch+1}/{num_epochs} - Train Loss: {avg_train_loss:.4f}")
         
-        # Validation
-        model.eval()
-        val_loss = 0
-        all_preds = []
-        all_labels = []
+        # Evaluate the model after training each epoch
+        f1 = evaluate_model(model, val_dataloader, device)
         
-        with torch.no_grad():
-            val_progress = tqdm(val_dataloader, desc=f"Validation Epoch {epoch+1}/{num_epochs}", leave=False)
-            for batch in val_progress:
-                batch = {k: v.to(device) for k, v in batch.items()}
-                with amp.autocast():
-                    outputs = model(**batch)
-                    loss = outputs['loss']
-                    logits = outputs['logits']
-                val_loss += loss.item()
-                val_progress.set_postfix(loss=loss.item())
-                
-                preds = torch.argmax(logits, dim=-1).cpu().numpy()
-                labels = batch['labels'].cpu().numpy()
-                all_preds.extend(preds)
-                all_labels.extend(labels)
-        
-        avg_val_loss = val_loss / len(val_dataloader) if len(val_dataloader) > 0 else 0
-        logging.info(f"Epoch {epoch+1}/{num_epochs} - Val Loss: {avg_val_loss:.4f}")
-        
-        # Calculate F1, Precision, Recall for each class and overall
-        f1 = f1_score(all_labels, all_preds, average='macro')
-        precision = precision_score(all_labels, all_preds, average='macro')
-        recall = recall_score(all_labels, all_preds, average='macro')
-        logging.info(f"Epoch {epoch+1}/{num_epochs} - F1 Score: {f1:.4f} - Precision: {precision:.4f} - Recall: {recall:.4f}")
-        
-        # Check for improvement and save top 5 models based on F1 score
+        # Save top 5 models based on F1 score
+        model_path = f"model_epoch_{epoch+1}.pth"
+        torch.save(model.state_dict(), model_path)
         if len(best_models) < 5:
-            heapq.heappush(best_models, (f1, epoch, model.state_dict()))  # Store model with F1 score
-            torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pth")
+            heapq.heappush(best_models, (f1, epoch, model_path))
             logging.info(f"Model saved at epoch {epoch+1}")
         else:
-            # Save the model if its F1 score is better than the lowest one in the heap
+            # If the new model's F1 is better than the lowest in heap, replace it
             if f1 > best_models[0][0]:
-                heapq.heapreplace(best_models, (f1, epoch, model.state_dict()))
-                torch.save(model.state_dict(), f"model_epoch_{epoch+1}.pth")
+                _, _, filename_to_remove = heapq.heappop(best_models)
+                if os.path.exists(filename_to_remove):
+                    os.remove(filename_to_remove)  # Remove the lowest-performing model
+                
+                heapq.heappush(best_models, (f1, epoch, model_path))
                 logging.info(f"Model saved at epoch {epoch+1}")
+            else:
+                # Remove the current model file if it's not in top 5
+                os.remove(model_path)
+                logging.info(f"Model at epoch {epoch+1} discarded, not in top 5")
         
         # Early stopping check based on validation loss
-        early_stopping(avg_val_loss)
+        early_stopping(avg_train_loss)
         if early_stopping.early_stop:
             logging.info("Early stopping triggered")
             break
     
     # Load the best model based on F1 score
-    best_f1, best_epoch, best_model_state = max(best_models, key=lambda x: x[0])
-    model.load_state_dict(best_model_state)
+    best_f1, best_epoch, best_model_file = max(best_models, key=lambda x: x[0])
+    model.load_state_dict(torch.load(best_model_file))
     logging.info(f"Best model from epoch {best_epoch+1} with F1 score {best_f1:.4f} loaded.")
     
     return model
+
 
 def run_train(train_json, train_image_folder, tokenizer, device, 
                       num_epochs, patience, batch_size, num_workers, train_ocr_cache_path,
@@ -185,21 +166,7 @@ def run_train(train_json, train_image_folder, tokenizer, device,
         learning_rate=learning_rate
     )
     logging.info('Model training complete')
-    
-    # Save the trained model
-    try:
-        torch.save(model.state_dict(), 'sarcasm_classifier_model.pth')
-        logging.info('Model saved as sarcasm_classifier_model.pth')
-    except Exception as e:
-        logging.error(f"Failed to save model: {e}")
-    
-    # Evaluate the model on validation set
-    try:
-        evaluate_model(model, val_dataloader, device)
-    except Exception as e:
-        logging.error(f"Failed to evaluate model: {e}")
-        return
-    
+      
     # Save OCR cache explicitly
     try:
         dataset.save_ocr_cache()

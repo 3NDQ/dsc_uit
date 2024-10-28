@@ -82,3 +82,4 @@ def evaluate_model(model, dataloader, device):
     # Calculate and log average loss
     average_loss = total_loss / len(dataloader) if len(dataloader) > 0 else 0
     logging.info(f"Average Loss: {average_loss:.4f}")
+    return overall_f1
