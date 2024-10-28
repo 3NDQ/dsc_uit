@@ -97,7 +97,7 @@ def evaluate_model(model, dataloader, device):
     labels = ['multi-sarcasm', 'text-sarcasm', 'image-sarcasm', 'not-sarcasm']
     
     # Calculate and log metrics for each class
-    logging.info("\nClass-wise Metrics:")
+    logging.info("\n----Class-wise Metrics----")
     for i, label in enumerate(labels):
         y_true = [1 if l == i else 0 for l in all_labels]
         y_pred = [1 if p == i else 0 for p in all_preds]
@@ -106,10 +106,7 @@ def evaluate_model(model, dataloader, device):
             y_true, y_pred, average='binary', zero_division=0
         )
         
-        logging.info(f"{label}:")
-        logging.info(f"  Precision: {precision:.4f}")
-        logging.info(f"  Recall: {recall:.4f}")
-        logging.info(f"  F1 Score: {f1:.4f}")
+        logging.info(f"{label}: precision: {precision:.4f}, recall: {recall:.4f}, f1 score: {f1:.4f}")
     
     # Calculate overall metrics
     overall_acc = accuracy_score(all_labels, all_preds)
@@ -118,12 +115,12 @@ def evaluate_model(model, dataloader, device):
     )
     
     # Log overall metrics
-    logging.info(f"\nOverall Accuracy: {overall_acc:.4f}")
+    logging.info("\n ----OVERALL----")
+    average_loss = total_loss / len(dataloader) if len(dataloader) > 0 else 0
+    logging.info(f"Val Loss: {average_loss:.4f}")
+    logging.info(f"Overall Accuracy: {overall_acc:.4f}")
     logging.info(f"Overall Precision: {overall_precision:.4f}")
     logging.info(f"Overall Recall: {overall_recall:.4f}")
-    logging.info(f"Overall F1 Score: {overall_f1:.4f}")
+    logging.info(f"OVERALL F1 SCORE: {overall_f1:.4f}")
     
-    # Calculate and log average loss
-    average_loss = total_loss / len(dataloader) if len(dataloader) > 0 else 0
-    logging.info(f"Average Loss: {average_loss:.4f}")
     return overall_f1
