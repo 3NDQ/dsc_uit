@@ -72,7 +72,6 @@ class BaseSarcasmDataset(Dataset):
                 logging.error(f"Failed to save OCR cache to {self.ocr_cache_path}: {e}")
 
     def _load_data(self, data_path):
-        # Đọc dữ liệu từ đường dẫn tệp JSON
         if isinstance(data_path, str) and os.path.isfile(data_path):
             try:
                 with open(data_path, 'r', encoding='utf-8') as f:
