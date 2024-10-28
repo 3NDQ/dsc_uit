@@ -34,6 +34,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         #     nn.ReLU(),
         #     nn.Dropout(0.1)
         # )
+        # Change projector to test
         self.projector = nn.Sequential(
             nn.Linear(combined_dim, 1024),
             nn.LayerNorm(1024),
