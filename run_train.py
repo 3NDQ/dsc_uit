@@ -39,7 +39,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
             
             optimizer.zero_grad()
             
-            with amp.autocast():
+            with torch.amp.autocast():
                 outputs = model(**batch)
                 loss = outputs['loss']
             

@@ -2,6 +2,7 @@
 import torch
 import torch.nn as nn
 import logging
+from utils import CrossAttention, SelfAttention
 
 class VietnameseSarcasmClassifier(nn.Module):
     def __init__(self, text_encoder, image_encoder, fusion_method='concat', num_labels=4):
@@ -14,10 +15,14 @@ class VietnameseSarcasmClassifier(nn.Module):
         logging.info(f"Combined dimension: {combined_dim}")
         
         if self.fusion_method == 'cross_attention':
-            # Cross-attention layers
-            self.text_to_image_attention = nn.MultiheadAttention(embed_dim=self.image_encoder.config.hidden_size, num_heads=8)
-            self.image_to_text_attention = nn.MultiheadAttention(embed_dim=self.text_encoder.config.hidden_size, num_heads=8)
+            hidden_size = self.image_encoder.config.hidden_size
+            self.text_to_image_attention = CrossAttention(d_in=hidden_size, d_out_kq=hidden_size, d_out_v=hidden_size)
+            self.image_to_text_attention = CrossAttention(d_in=hidden_size, d_out_kq=hidden_size, d_out_v=hidden_size)
             logging.info("Cross-Attention layers initialized for both text-to-image and image-to-text.")
+        
+        elif self.fusion_method == 'attention':
+            self.self_attention = SelfAttention(d_in=combined_dim, d_out_kq=combined_dim, d_out_v=combined_dim)
+            logging.info("Self-Attention layer initialized for feature fusion.")
         
         self.projector = nn.Sequential(
             nn.Linear(combined_dim, 1024),
@@ -48,30 +53,21 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_features = text_outputs.last_hidden_state[:, 0, :]  # Use CLS token for text
         
         if self.fusion_method == 'cross_attention':
-            # Text-to-Image Attention
-            image_features_expanded = image_features.unsqueeze(1)  # Add sequence dimension for attention
-            text_features_expanded = text_features.unsqueeze(1)    # Add sequence dimension for attention
-            
-            attended_text, _ = self.text_to_image_attention(
-                query=text_features_expanded, key=image_features_expanded, value=image_features_expanded
-            )
-            attended_image, _ = self.image_to_text_attention(
-                query=image_features_expanded, key=text_features_expanded, value=text_features_expanded
-            )
-            
-            attended_text = attended_text.squeeze(1)  # Remove sequence dimension
-            attended_image = attended_image.squeeze(1)  # Remove sequence dimension
+            # Apply Cross-Attention between text and image features
+            attended_text = self.text_to_image_attention(text_features, image_features)
+            attended_image = self.image_to_text_attention(image_features, text_features)
             
             # Combine attended features by concatenation
             combined_features = torch.cat((attended_text, attended_image), dim=1)
             logging.debug("Applied cross-attention to combine image and text features.")
             shared_features = self.projector(combined_features)
+        
         elif self.fusion_method == 'attention':
-            # Self-attention (previously defined)
-            combined_features = torch.cat((image_features, text_features), dim=1).unsqueeze(0)
-            attended_features, _ = self.self_attention(combined_features, combined_features, combined_features)
-            attended_features = attended_features.squeeze(0)
+            # Apply Self-Attention on concatenated features
+            combined_features = torch.cat((image_features, text_features), dim=1)
+            attended_features = self.self_attention(combined_features)
             shared_features = self.projector(attended_features)
+        
         else:
             # Concatenate features (default)
             combined_features = torch.cat((image_features, text_features), dim=1)
