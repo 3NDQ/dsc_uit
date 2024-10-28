@@ -38,8 +38,8 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
             batch = {k: v.to(device) for k, v in batch.items()}
             
             optimizer.zero_grad()
-            
-            with torch.amp.autocast():
+            device_type = "cuda" if torch.cuda.is_available() else "cpu"
+            with torch.amp.autocast(device_type=device_type):
                 outputs = model(**batch)
                 loss = outputs['loss']
             
