@@ -18,7 +18,7 @@ class BaseSarcasmDataset(Dataset):
         self.ocr_cache_path = ocr_cache_path
         self.active_ocr = active_ocr
         self.ocr_cache = self._load_ocr_cache()
-        self.ocr_reader = easyocr.Reader(['vi', 'en'], gpu=True)
+        # self.ocr_reader = easyocr.Reader(['vi', 'en'], gpu=True)
         self.data = self._load_data(data_path)
 
         # Image transformation
@@ -93,10 +93,10 @@ class BaseSarcasmDataset(Dataset):
         image_path = os.path.join(self.image_folder, item['image'])
 
         # Perform OCR
-        raw_ocr = self.ocr_cache.get(image_path, self._perform_ocr(image_path) if not self.use_ocr_cache else "")
-        if self.use_ocr_cache:
-            self.ocr_cache[image_path] = raw_ocr
-
+        # raw_ocr = self.ocr_cache.get(image_path, self._perform_ocr(image_path) if not self.use_ocr_cache else "")
+        # if self.use_ocr_cache:
+        #     self.ocr_cache[image_path] = raw_ocr
+        raw_ocr = ""
         # Process Image and Text
         image = self._load_image(image_path)
         combined_text = self._get_combined_text(item['caption'], raw_ocr)
