@@ -4,6 +4,25 @@ import torch.nn as nn
 import logging
 from utils import CrossAttention, SelfAttention
 
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=1, gamma=2, reduction='mean'):
+        super(FocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+
+    def forward(self, logits, targets):
+        ce_loss = nn.CrossEntropyLoss(reduction='none')(logits, targets)
+        pt = torch.exp(-ce_loss)  # Probabilities of the correct class
+        focal_loss = self.alpha * (1 - pt) ** self.gamma * ce_loss
+
+        if self.reduction == 'mean':
+            return focal_loss.mean()
+        elif self.reduction == 'sum':
+            return focal_loss.sum()
+        else:
+            return focal_loss
+
 class VietnameseSarcasmClassifier(nn.Module):
     def __init__(self, text_encoder, image_encoder, fusion_method='concat', num_labels=4):
         super(VietnameseSarcasmClassifier, self).__init__()
@@ -95,7 +114,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         
         loss = None
         if labels is not None:
-            criterion = nn.CrossEntropyLoss()
+            criterion = FocalLoss()
             loss = criterion(final_logits, labels)
             
         return {'loss': loss, 'logits': final_logits} if loss is not None else final_logits
