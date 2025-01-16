@@ -23,24 +23,18 @@ def test_model(model, device, dataloader):
     return predictions
 
 
-def run_test(test_json, test_image_folder, tokenizer, device, 
-                            batch_size, num_workers, 
-                            test_ocr_cache_path, model_paths, 
-                            text_encoder, image_encoder, fusion_method, use_test_ocr_cache=False, active_ocr=True):
-    if model_paths is None:
-        logging.error("No model paths were provided, using default.")
-    else:
-        logging.info(f"Model paths received: {model_paths}")
-    logging.info("Starting testing with multiple models...")
+def run_test(test_json, test_image_folder, tokenizer, 
+             device, batch_size, num_workers, 
+             test_ocr_cache_path, model_paths, 
+             text_encoder, image_encoder, fusion_method):
+    logging.info("Starting TESTING...")
 
     # Create test dataset with OCR caching parameters
     test_dataset = TestSarcasmDataset(
         data_path=test_json, 
         image_folder=test_image_folder, 
         text_tokenizer=tokenizer, 
-        use_ocr_cache=use_test_ocr_cache, 
         ocr_cache_path=test_ocr_cache_path,
-        active_ocr=active_ocr
     )
     
     # Create DataLoader
@@ -55,20 +49,16 @@ def run_test(test_json, test_image_folder, tokenizer, device,
     # Initialize model with passed encoders
     try:
         model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method).to(device)
+        logging.info('Model initialized and moved to device')
     except Exception as e:
         logging.error(f"Failed to initialize the model: {e}")
         return
     
     # Iterate over each model path
     for idx, model_path in enumerate(model_paths):
-        # Load trained model weights
-        if not os.path.isfile(model_path):
-            logging.error(f"Model file not found at {model_path}")
-            raise FileNotFoundError(f"Model file not found at {model_path}")
-        
         try:
             model.load_state_dict(torch.load(model_path, map_location=device))
-            logging.info(f"Model loaded from {model_path}")
+            logging.info(f"Model loaded from \"{model_path}\"")
         except Exception as e:
             logging.error(f"Failed to load model from {model_path}: {e}")
             return
@@ -109,17 +99,16 @@ def run_test(test_json, test_image_folder, tokenizer, device,
             "phase": "dev"
         }
         
-        # Save predictions to JSON for each model
-        output_filename = f'results_model_{idx + 1}.json'
+        try:
+            model_name = os.path.basename(model_path)  
+            epoch = model_name.split('_')[-1].split('.')[0] 
+            output_filename = f'model_epoch_{epoch}.json'
+        except:
+            output_filename = f'results_model_{idx + 1}.json'
+            
         try:
             with open(output_filename, 'w', encoding='utf-8') as f:
                 json.dump(output, f, ensure_ascii=False, indent=2)
             logging.info(f"Predictions saved to {output_filename} for model {idx+1}")
         except Exception as e:
             logging.error(f"Failed to save predictions for model {idx + 1}: {e}")
-        
-        # Save OCR cache explicitly
-        try:
-            test_dataset.save_ocr_cache()
-        except Exception as e:
-            logging.error(f"Failed to save OCR cache for model {idx + 1}: {e}")

@@ -2,7 +2,7 @@
 import torch
 import torch.nn as nn
 import logging
-from utils import CrossAttention, SelfAttention
+from utils import CrossAttention, SelfAttention, FocalLoss
 
 class VietnameseSarcasmClassifier(nn.Module):
     def __init__(self, text_encoder, image_encoder, fusion_method='concat', num_labels=4):
@@ -95,7 +95,8 @@ class VietnameseSarcasmClassifier(nn.Module):
         
         loss = None
         if labels is not None:
-            criterion = nn.CrossEntropyLoss()
+            # criterion = nn.CrossEntropyLoss()
+            criterion = FocalLoss()
             loss = criterion(final_logits, labels)
             
         return {'loss': loss, 'logits': final_logits} if loss is not None else final_logits

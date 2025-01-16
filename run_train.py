@@ -42,7 +42,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
             with torch.amp.autocast(device_type=device_type):
                 outputs = model(**batch)
                 loss = outputs['loss']
-            
+                
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
@@ -55,7 +55,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         logging.info(f"\n ####----EPOCH {epoch+1}/{num_epochs} - Train Loss: {avg_train_loss:.4f}----####")
         
         # Evaluate the model after training each epoch
-        f1 = evaluate_model(model, val_dataloader, device)
+        f1 = evaluate_model(model, val_dataloader, device, epoch)
         
         # Save top 5 models based on F1 score
         model_path = f"model_epoch_{epoch+1}.pth"
@@ -91,20 +91,19 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     return model
 
 
-def run_train(train_json, train_image_folder, tokenizer, device, 
-                      num_epochs, patience, batch_size, num_workers, train_ocr_cache_path,
-                      text_encoder, image_encoder, learning_rate, 
-                      val_size, random_state, fusion_method, use_train_ocr_cache=False, active_ocr=True):
-    logging.info("Starting training and evaluation...")
+def run_train(train_json, train_image_folder, tokenizer, 
+              device, batch_size, num_workers,
+              learning_rate, val_size, random_state,
+              train_ocr_cache_path, num_epochs, patience,
+              text_encoder, image_encoder, fusion_method):
+    logging.info("Starting TRAINING and EVALUATION...")
     
-    # Create dataset with OCR caching parameters
+    # Create train dataset with OCR caching parameters
     dataset = TrainSarcasmDataset(
         data_path=train_json, 
         image_folder=train_image_folder, 
         text_tokenizer=tokenizer, 
-        use_ocr_cache=use_train_ocr_cache, 
         ocr_cache_path=train_ocr_cache_path,
-        active_ocr=active_ocr
     )
     
     # Extract labels for stratified splitting
@@ -122,7 +121,6 @@ def run_train(train_json, train_image_folder, tokenizer, device,
             stratify=labels, 
             random_state=random_state
         )
-        logging.info('Finished splitting train/dev indices')
     except Exception as e:
         logging.error(f"Failed to split data into train/dev sets: {e}")
         return
@@ -130,7 +128,7 @@ def run_train(train_json, train_image_folder, tokenizer, device,
     # Create subsets
     train_dataset = Subset(dataset, train_idx)
     val_dataset = Subset(dataset, val_idx)
-    logging.info('Finished creating train/dev sets')
+    logging.info('Created train and val datasets.')
     
     # Create DataLoaders
     train_dataloader = DataLoader(
@@ -145,7 +143,7 @@ def run_train(train_json, train_image_folder, tokenizer, device,
         shuffle=False, 
         num_workers=num_workers
     )
-    logging.info('Finished loading DataLoaders')
+    logging.info('Finished loading Train and Val DataLoaders')
     
     # Initialize model with passed encoders
     try:
@@ -166,10 +164,4 @@ def run_train(train_json, train_image_folder, tokenizer, device,
         patience=patience,
         learning_rate=learning_rate
     )
-    logging.info('Model training complete')
-      
-    # Save OCR cache explicitly
-    try:
-        dataset.save_ocr_cache()
-    except Exception as e:
-        logging.error(f"Failed to save OCR cache: {e}")
+    logging.info('--Model training complete--')

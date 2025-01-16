@@ -33,8 +33,8 @@ def main():
     parser.add_argument('--train_image_folder', type=str, default='/kaggle/input/vimmsd-training-dataset/training-images/train-images', help='Path to the training images folder')
     
     # Testing arguments
-    parser.add_argument('--test_json', type=str, default='/kaggle/input/vimmsd-public-test/vimmsd-public-test.json', help='Path to the testing JSON file')
-    parser.add_argument('--test_image_folder', type=str, default='/kaggle/input/vimmsd-public-test/public-test-images/dev-images', help='Path to the testing images folder')
+    parser.add_argument('--test_json', type=str, default='/kaggle/input/vimmsd-training-dataset/vimmsd-public-test.json', help='Path to the testing JSON file')
+    parser.add_argument('--test_image_folder', type=str, default='/kaggle/input/vimmsd-training-dataset/public-test-images/dev-images', help='Path to the testing images folder')
     parser.add_argument('--model_paths', type=str, nargs='+', default=['model_epoch_1.pth'], help='Paths to trained models')
     
     # Common arguments
@@ -42,12 +42,12 @@ def main():
     parser.add_argument('--num_workers', type=int, default=4, help='Number of worker threads for data loading')
     
     # OCR Training Caching arguments
-    parser.add_argument('--use_train_ocr_cache', action='store_true', help='Enable OCR caching for training')
-    parser.add_argument('--train_ocr_cache_path', type=str, default='train_ocr_cache.json', help='Path to store or load train OCR cache')
+    # parser.add_argument('--use_train_ocr_cache', action='store_true', help='Enable OCR caching for training')
+    parser.add_argument('--train_ocr_cache_path', type=str, default=None, help='Path to store or load train OCR cache')
     
     # OCR Testing Caching arguments
-    parser.add_argument('--use_test_ocr_cache', action='store_true', help='Enable OCR caching for testing')
-    parser.add_argument('--test_ocr_cache_path', type=str, default='test_ocr_cache.json', help='Path to store or load test OCR cache')
+    # parser.add_argument('--use_test_ocr_cache', action='store_true', help='Enable OCR caching for testing')
+    parser.add_argument('--test_ocr_cache_path', type=str, default=None, help='Path to store or load test OCR cache')
 
     # Training hyperparameters
     parser.add_argument('--num_epochs', type=int, default=20, help='Number of training epochs')
@@ -56,27 +56,65 @@ def main():
     parser.add_argument('--val_size', type=float, default=0.2, help='Val size for train test split')
     parser.add_argument('--random_state', type=int, default=42, help='Random state')
     parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention', 'cross_attention'], help='Method to fuse features: concat (default) or attention, cross_attention')
-    parser.add_argument('--active_ocr', action='store_true', help='Enable combining OCR and text')
-
+    # parser.add_argument('--active_ocr', action='store_true', help='Enable combining OCR and text')
     
     args = parser.parse_args()
+    
+    # Validate parameters based on the mode
+    if args.mode == 'train':
+        # Check for test-specific parameters
+        if args.test_json is not None:
+            parser.error("The argument `--test_json` is not valid in train mode.")
+        if args.test_image_folder is not None:
+            parser.error("The argument `--test_image_folder` is not valid in train mode.")
+        if args.model_paths != ['model_epoch_1.pth']: 
+            parser.error("The argument `--model_paths` is not valid in train mode.")
+        # Check for required train parameters
+        if args.train_json is None:
+            parser.error("The argument `--train_json` is required in train mode.")
+        if args.train_image_folder is None:
+            parser.error("The argument `--train_image_folder` is required in train mode.")
+
+    elif args.mode == 'test':
+        # Check for train-specific parameters
+        if args.train_json is not None:
+            parser.error("The argument `--train_json` is not valid in test mode.")
+        if args.train_image_folder is not None:
+            parser.error("The argument `--train_image_folder` is not valid in test mode.")
+        if args.num_epochs != 20: 
+            parser.error("The argument `--num_epochs` is not valid in test mode.")
+        if args.patience != 10:
+            parser.error("The argument `--patience` is not valid in test mode.")
+        if args.learning_rate != 3e-5:
+            parser.error("The argument `--learning_rate` is not valid in test mode.")
+        if args.val_size != 0.2:
+            parser.error("The argument `--val_size` is not valid in test mode.")
+        if args.random_state != 42:
+            parser.error("The argument `--random_state` is not valid in test mode.")
+        # Check for required test parameters
+        if args.test_json is None:
+            parser.error("The argument `--test_json` is required in test mode.")
+        if args.test_image_folder is None:
+            parser.error("The argument `--test_image_folder` is required in test mode.")
+        if not args.model_paths:
+            parser.error("The argument `--model_paths` is required in test mode.")
     
     # Validate paths
     if args.mode == 'train':
         if not os.path.isfile(args.train_json):
-            parser.error(f"Training JSON file not found at {args.train_json}")
+            parser.error(f"Training JSON file not found at \"{args.train_json}\"")
         if not os.path.isdir(args.train_image_folder):
-            parser.error(f"Training image folder not found at {args.train_image_folder}")
+            parser.error(f"Training image folder not found at \"{args.train_image_folder}\"")
     elif args.mode == 'test':
         if not os.path.isfile(args.test_json):
-            parser.error(f"Testing JSON file not found at {args.test_json}")
+            parser.error(f"Testing JSON file not found at \"{args.test_json}\"")
         if not os.path.isdir(args.test_image_folder):
-            parser.error(f"Testing image folder not found at {args.test_image_folder}")
+            parser.error(f"Testing image folder not found at \"{args.test_image_folder}\"")
         if not args.model_paths:
             parser.error("No model paths provided for testing.")
         for model_path in args.model_paths:
             if not os.path.isfile(model_path):
-                parser.error(f"Model file not found at {model_path}")
+                parser.error(f"Model file not found at \"{model_path}\"")
 
     # Initialize tokenizer using factory function
     try:
@@ -94,10 +132,10 @@ def main():
         return
     
     # Add special tokens to tokenizer
-    if args.active_ocr:
+    if args.train_ocr_cache_path:
         special_tokens = {"additional_special_tokens": ["[OCR]", "[CAPTION]"]}
         tokenizer.add_special_tokens(special_tokens)
-        logging.info("Tokenizer special tokens added.")
+        logging.info("Added special tokens for tokenizer.")
     
         # Resize token embeddings to accommodate new tokens
         try:
@@ -114,8 +152,6 @@ def main():
         run_train(
             train_json=args.train_json,
             train_image_folder=args.train_image_folder,
-            active_ocr=args.active_ocr,
-            use_train_ocr_cache=args.use_train_ocr_cache,
             train_ocr_cache_path=args.train_ocr_cache_path,
             tokenizer=tokenizer,
             text_encoder=text_encoder,
@@ -135,8 +171,6 @@ def main():
         run_test(
             test_json=args.test_json,
             test_image_folder=args.test_image_folder,
-            active_ocr=args.active_ocr,
-            use_test_ocr_cache=args.use_test_ocr_cache,
             test_ocr_cache_path=args.test_ocr_cache_path, 
             tokenizer=tokenizer,
             text_encoder=text_encoder,
