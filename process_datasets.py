@@ -1,4 +1,3 @@
-# process_data.py
 import os
 import json
 import logging
@@ -22,7 +21,7 @@ class BaseSarcasmDataset(Dataset):
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
             transforms.Normalize(
-                mean=[0.485, 0.456, 0.406], 
+                mean=[0.485, 0.456, 0.406],
                 std=[0.229, 0.224, 0.225]
             )
         ])
@@ -73,7 +72,7 @@ class BaseSarcasmDataset(Dataset):
         item = self.data[idx]
         image_path = os.path.join(self.image_folder, item['image'])
 
-        raw_ocr = self.ocr_cache.get(image_path) if self.use_ocr_cache else ""
+        raw_ocr = self.ocr_cache.get(image_path) if self.ocr_cache_path else ""
         if self.ocr_cache_path:
             self.ocr_cache[image_path] = raw_ocr
 
@@ -81,64 +80,44 @@ class BaseSarcasmDataset(Dataset):
         image = self._load_image(image_path)
         combined_text = self._get_combined_text(item['caption'], raw_ocr)
         encoded_text = self.text_tokenizer(
-            combined_text, 
-            padding='max_length', 
-            truncation=True, 
-            max_length=self.max_length, 
+            combined_text,
+            padding='max_length',
+            truncation=True,
+            max_length=self.max_length,
             return_tensors='pt'
         )
 
-        if 'label' in item and item['label'] is not None:
-            return {
-                'image': image,
-                'input_ids': encoded_text['input_ids'].squeeze(),
-                'attention_mask': encoded_text['attention_mask'].squeeze(),
-                'labels': torch.tensor(item['label_id'], dtype=torch.long) if 'label_id' in item else None
-            }
-        else:
-            # Nếu không có 'label', chỉ trả về image, input_ids, attention_mask
-            return {
-                'image': image,
-                'input_ids': encoded_text['input_ids'].squeeze(),
-                'attention_mask': encoded_text['attention_mask'].squeeze()
-            }
-
-class TrainSarcasmDataset(BaseSarcasmDataset):
-    def _load_data(self, data_path):
-        data = super()._load_data(data_path)
-        label_to_id = {
-            'multi-sarcasm': 0, 
-            'text-sarcasm': 1, 
-            'image-sarcasm': 2, 
-            'not-sarcasm': 3,
-        }
-        for item in data:
-            if isinstance(item, dict) and 'label' in item:
-                item['label_id'] = label_to_id.get(item['label'], 3)
-            else:
-                logging.warning("Skipping an item due to unexpected structure.")
-        return data
-
-class TestSarcasmDataset(BaseSarcasmDataset):
-    def __getitem__(self, idx):
-        item = self.data[idx]
-        image_path = os.path.join(self.image_folder, item['image'])
-
-        # Perform OCR (nếu cần)
-        raw_ocr = ""
-        image = self._load_image(image_path)
-        combined_text = self._get_combined_text(item['caption'], raw_ocr)
-        encoded_text = self.text_tokenizer(
-            combined_text, 
-            padding='max_length', 
-            truncation=True, 
-            max_length=self.max_length, 
-            return_tensors='pt'
-        )
-
-        # Trả về 'image', 'input_ids', và 'attention_mask' mà không có 'labels'
-        return {
+        output = {
             'image': image,
             'input_ids': encoded_text['input_ids'].squeeze(),
             'attention_mask': encoded_text['attention_mask'].squeeze()
         }
+
+        if 'label' in item and item['label'] is not None and hasattr(self, 'label_to_id'):
+            output['labels'] = torch.tensor(self.label_to_id.get(item['label'], 3), dtype=torch.long)
+        elif 'label_id' in item and item['label_id'] is not None:
+            output['labels'] = torch.tensor(item['label_id'], dtype=torch.long)
+
+        return output
+
+class TrainSarcasmDataset(BaseSarcasmDataset):
+    def __init__(self, data_path, image_folder, text_tokenizer, ocr_cache_path=None, max_length=256):
+        self.label_to_id = {
+            'multi-sarcasm': 0,
+            'text-sarcasm': 1,
+            'image-sarcasm': 2,
+            'not-sarcasm': 3,
+        }
+        super().__init__(data_path, image_folder, text_tokenizer, ocr_cache_path, max_length)
+        self._process_labels()
+
+    def _process_labels(self):
+        for item in self.data:
+            if isinstance(item, dict) and 'label' in item:
+                item['label_id'] = self.label_to_id.get(item['label'], 3)
+            else:
+                logging.warning("Skipping an item due to unexpected structure.")
+
+class TestSarcasmDataset(BaseSarcasmDataset):
+    def __init__(self, data_path, image_folder, text_tokenizer, ocr_cache_path=None, max_length=256):
+        super().__init__(data_path, image_folder, text_tokenizer, ocr_cache_path, max_length)
