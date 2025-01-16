@@ -60,44 +60,44 @@ def main():
     
     args = parser.parse_args()
     
-    # Validate parameters based on the mode
-    if args.mode == 'train':
-        # Check for test-specific parameters
-        if args.test_json is not None:
-            parser.error("The argument `--test_json` is not valid in train mode.")
-        if args.test_image_folder is not None:
-            parser.error("The argument `--test_image_folder` is not valid in train mode.")
-        if args.model_paths != ['model_epoch_1.pth']: 
-            parser.error("The argument `--model_paths` is not valid in train mode.")
-        # Check for required train parameters
-        if args.train_json is None:
-            parser.error("The argument `--train_json` is required in train mode.")
-        if args.train_image_folder is None:
-            parser.error("The argument `--train_image_folder` is required in train mode.")
+    # # Validate parameters based on the mode
+    # if args.mode == 'train':
+    #     # Check for test-specific parameters
+    #     if args.test_json is not None:
+    #         parser.error("The argument `--test_json` is not valid in train mode.")
+    #     if args.test_image_folder is not None:
+    #         parser.error("The argument `--test_image_folder` is not valid in train mode.")
+    #     if args.model_paths != ['model_epoch_1.pth']: 
+    #         parser.error("The argument `--model_paths` is not valid in train mode.")
+    #     # Check for required train parameters
+    #     if args.train_json is None:
+    #         parser.error("The argument `--train_json` is required in train mode.")
+    #     if args.train_image_folder is None:
+    #         parser.error("The argument `--train_image_folder` is required in train mode.")
 
-    elif args.mode == 'test':
-        # Check for train-specific parameters
-        if args.train_json is not None:
-            parser.error("The argument `--train_json` is not valid in test mode.")
-        if args.train_image_folder is not None:
-            parser.error("The argument `--train_image_folder` is not valid in test mode.")
-        if args.num_epochs != 20: 
-            parser.error("The argument `--num_epochs` is not valid in test mode.")
-        if args.patience != 10:
-            parser.error("The argument `--patience` is not valid in test mode.")
-        if args.learning_rate != 3e-5:
-            parser.error("The argument `--learning_rate` is not valid in test mode.")
-        if args.val_size != 0.2:
-            parser.error("The argument `--val_size` is not valid in test mode.")
-        if args.random_state != 42:
-            parser.error("The argument `--random_state` is not valid in test mode.")
-        # Check for required test parameters
-        if args.test_json is None:
-            parser.error("The argument `--test_json` is required in test mode.")
-        if args.test_image_folder is None:
-            parser.error("The argument `--test_image_folder` is required in test mode.")
-        if not args.model_paths:
-            parser.error("The argument `--model_paths` is required in test mode.")
+    # elif args.mode == 'test':
+    #     # Check for train-specific parameters
+    #     if args.train_json is not None:
+    #         parser.error("The argument `--train_json` is not valid in test mode.")
+    #     if args.train_image_folder is not None:
+    #         parser.error("The argument `--train_image_folder` is not valid in test mode.")
+    #     if args.num_epochs != 20: 
+    #         parser.error("The argument `--num_epochs` is not valid in test mode.")
+    #     if args.patience != 10:
+    #         parser.error("The argument `--patience` is not valid in test mode.")
+    #     if args.learning_rate != 3e-5:
+    #         parser.error("The argument `--learning_rate` is not valid in test mode.")
+    #     if args.val_size != 0.2:
+    #         parser.error("The argument `--val_size` is not valid in test mode.")
+    #     if args.random_state != 42:
+    #         parser.error("The argument `--random_state` is not valid in test mode.")
+    #     # Check for required test parameters
+    #     if args.test_json is None:
+    #         parser.error("The argument `--test_json` is required in test mode.")
+    #     if args.test_image_folder is None:
+    #         parser.error("The argument `--test_image_folder` is required in test mode.")
+    #     if not args.model_paths:
+    #         parser.error("The argument `--model_paths` is required in test mode.")
     
     # Validate paths
     if args.mode == 'train':
