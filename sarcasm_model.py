@@ -94,10 +94,10 @@ class VietnameseSarcasmClassifier(nn.Module):
         final_logits[:, 3] = 1 - (multi_logits[:, 1] + text_logits[:, 1] + image_logits[:, 1]).clamp(0, 1)
         
         loss = None
-        if labels is not None:
-            # criterion = nn.CrossEntropyLoss()
-            criterion = FocalLoss()
-            loss = criterion(final_logits, labels)
             
+        if labels is not None:
+            criterion = FocalLoss(gamma=2.0, alpha=[0.25, 0.75])  # Ví dụ sử dụng gamma = 2.0 và alpha = [0.25, 0.75]
+            # criterion = nn.CrossEntropyLoss()
+            loss = criterion(final_logits, labels)
         return {'loss': loss, 'logits': final_logits} if loss is not None else final_logits
 
