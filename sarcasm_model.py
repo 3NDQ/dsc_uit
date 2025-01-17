@@ -94,10 +94,22 @@ class VietnameseSarcasmClassifier(nn.Module):
         final_logits[:, 3] = 1 - (multi_logits[:, 1] + text_logits[:, 1] + image_logits[:, 1]).clamp(0, 1)
         
         loss = None
-            
+        image_count = 442
+        text_count = 77
+        multi_count = 4224
+        not_count = 6062
+
+        # Tổng số mẫu
+        total_alpha = image_count + text_count + multi_count + not_count
+
+        # Chuẩn hóa các alpha sao cho tổng = 1
+        alpha_image = image_count / total_alpha
+        alpha_text = text_count / total_alpha
+        alpha_multi = multi_count / total_alpha
+        alpha_not = not_count / total_alpha
         if labels is not None:
-            criterion = FocalLoss(gamma=2.0, alpha=[0.25, 0.75])  # Ví dụ sử dụng gamma = 2.0 và alpha = [0.25, 0.75]
-            # criterion = nn.CrossEntropyLoss()
+            alpha = torch.tensor([alpha_multi, alpha_text, alpha_image, alpha_not], device='cuda') 
+            criterion = FocalLoss(alpha=alpha, gamma=2)
             loss = criterion(final_logits, labels)
         return {'loss': loss, 'logits': final_logits} if loss is not None else final_logits
 
