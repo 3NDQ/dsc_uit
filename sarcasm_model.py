@@ -92,7 +92,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         final_logits[:, 1] = text_logits[:, 1]
         final_logits[:, 2] = image_logits[:, 1]
         final_logits[:, 3] = 1 - (multi_logits[:, 1] + text_logits[:, 1] + image_logits[:, 1]).clamp(0, 1)
-        
+        final_logits.device
         loss = None
         image_count = 442
         text_count = 77
@@ -108,8 +108,8 @@ class VietnameseSarcasmClassifier(nn.Module):
         alpha_multi = multi_count / total_alpha
         alpha_not = not_count / total_alpha
         if labels is not None:
-            alpha = torch.tensor([alpha_multi, alpha_text, alpha_image, alpha_not], device='cuda') 
-            criterion = FocalLoss(alpha=alpha, gamma=2)
+            alpha = torch.tensor([alpha_multi, alpha_text, alpha_image, alpha_not], device=final_logits.device) 
+            criterion = FocalLoss(device = device, alpha=alpha, gamma=2)
             loss = criterion(final_logits, labels)
         return {'loss': loss, 'logits': final_logits} if loss is not None else final_logits
 

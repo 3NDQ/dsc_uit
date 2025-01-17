@@ -22,12 +22,14 @@ class FocalLoss(nn.Module):
         >>> output = loss(input, target)
         >>> output.backward()
     """
-    def __init__(self, gamma=0, alpha: List[float] = None, reduction="mean"):
+    def __init__(self, device, gamma=0, alpha: List[float] = None, reduction="mean"):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
         if alpha is not None:
-            self.alpha = torch.FloatTensor(alpha)
+            self.alpha = torch.FloatTensor(alpha).to(device)  # device là cuda:0 nếu model đang ở trên GPU
+        else:
+            self.alpha = None
         self.reduction = reduction
 
     def forward(self, input, target):
