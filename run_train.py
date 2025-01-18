@@ -168,8 +168,3 @@ def run_train(train_json, train_image_folder, tokenizer, device,
     )
     logging.info('Model training complete')
       
-    # Save OCR cache explicitly
-    try:
-        dataset.save_ocr_cache()
-    except Exception as e:
-        logging.error(f"Failed to save OCR cache: {e}")

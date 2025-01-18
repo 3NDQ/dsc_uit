@@ -118,8 +118,3 @@ def run_test(test_json, test_image_folder, tokenizer, device,
         except Exception as e:
             logging.error(f"Failed to save predictions for model {idx + 1}: {e}")
         
-        # Save OCR cache explicitly
-        try:
-            test_dataset.save_ocr_cache()
-        except Exception as e:
-            logging.error(f"Failed to save OCR cache for model {idx + 1}: {e}")

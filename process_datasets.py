@@ -47,15 +47,6 @@ class BaseSarcasmDataset(Dataset):
             logging.error(f"Image loading failed for {image_path}: {e}")
             return torch.zeros(3, 224, 224)
 
-    def save_ocr_cache(self):
-        if self.use_ocr_cache and self.ocr_cache_path:
-            try:
-                with open(self.ocr_cache_path, 'w', encoding='utf-8') as f:
-                    json.dump(self.ocr_cache, f, ensure_ascii=False, indent=2)
-                logging.info(f"OCR cache saved to {self.ocr_cache_path}")
-            except Exception as e:
-                logging.error(f"Failed to save OCR cache to {self.ocr_cache_path}: {e}")
-
     def _load_data(self, data_path):
         if isinstance(data_path, str) and os.path.isfile(data_path):
             try:
@@ -78,7 +69,7 @@ class BaseSarcasmDataset(Dataset):
         image_path = os.path.join(self.image_folder, item['image'])
 
         # Perform OCR
-        raw_ocr = self.ocr_cache.get(image_path, self._perform_ocr(image_path) if not self.use_ocr_cache else "")
+        raw_ocr = self.ocr_cache.get(image_path, self.use_ocr_cache)
         if self.use_ocr_cache:
             self.ocr_cache[image_path] = raw_ocr
 
