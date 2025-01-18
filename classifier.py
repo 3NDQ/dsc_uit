@@ -57,7 +57,7 @@ class CombinedSarcasmClassifier:
         else:
             raise FileNotFoundError(f"JSON file not found at {input_json_file_path}")
 
-        for image in tqdm(images, desc="Processing images and OCR"):
+        for image in images:
             try:
                 image_path = os.path.join(self.train_path if not is_test else self.test_path, image)
                 img = cv2.imread(image_path)
@@ -87,7 +87,7 @@ class CombinedSarcasmClassifier:
                 ocr_features.append(np.zeros(1024))
 
         text_features = []
-        for text in tqdm(texts, desc="Processing texts"):
+        for text in texts:
             try:
                 inputs = self.jina_tokenizer(text, return_tensors="pt", padding="longest", truncation=True, max_length=512).to(self.device)
                 with torch.no_grad():
