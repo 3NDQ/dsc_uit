@@ -64,7 +64,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         elif self.fusion_method == 'attention':
           combined_size = 768 + 768 + 768
         self.fc = nn.Linear(combined_size, num_labels)
-        self.loss_fct = FocalLoss(gamma=self.gamma)
+        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=[0.1, 0.4, 0.2, 0.1])
 
     def forward(self, image_features, text_features, labels=None):
         # Combine features based on fusion method
