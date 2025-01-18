@@ -3,7 +3,9 @@ import torch
 import torch.nn as nn
 import logging
 from utils import CrossAttention, SelfAttention
-
+import numpy as np
+from tqdm import tqdm
+import cv2
 class FocalLoss(nn.Module):
     def __init__(self, alpha=1, gamma=2, reduction='mean'):
         super(FocalLoss, self).__init__()
@@ -53,6 +55,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         #     nn.ReLU(),
         #     nn.Dropout(0.1)
         # )
+        
         # Change projector to test
         self.projector = nn.Sequential(
             nn.Linear(combined_dim, 1024),
@@ -74,48 +77,50 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.text_classifier = nn.Linear(512, 2)
         self.image_classifier = nn.Linear(512, 2)
         self.multi_classifier = nn.Linear(512, 2)
-        logging.info("Classification heads initialized.")
-        
-    def forward(self, image, input_ids, attention_mask, labels=None):
+        logging.info("Classification heads initialized.")        
+
+    def forward(self, image, caption, ocr=None, labels=None):
         logging.debug("Forward pass started.")
+        
         # Image encoding
         image_outputs = self.image_encoder(image)
-        image_features = image_outputs.last_hidden_state[:, 0, :]  
+        image_features = image_outputs.last_hidden_state[:, 0, :]  # Use the [CLS] token representation
         
         # Text encoding
-        text_outputs = self.text_encoder(input_ids=input_ids, attention_mask=attention_mask)
-        text_features = text_outputs.last_hidden_state[:, 0, :]  
+        text_outputs = self.text_encoder(caption)
+        text_features = text_outputs.last_hidden_state[:, 0, :]  # Use the [CLS] token representation
         
+        # Combine features based on fusion method
         if self.fusion_method == 'cross_attention':
             attended_text = self.text_to_image_attention(text_features, image_features)
             attended_image = self.image_to_text_attention(image_features, text_features)
-            
             combined_features = torch.cat((attended_text, attended_image), dim=1)
-            logging.debug("Applied cross-attention to combine image and text features.")
-            shared_features = self.projector(combined_features)
-        
         elif self.fusion_method == 'attention':
             combined_features = torch.cat((image_features, text_features), dim=1)
             attended_features = self.self_attention(combined_features)
-            shared_features = self.projector(attended_features)
+            combined_features = attended_features
         else:
             combined_features = torch.cat((image_features, text_features), dim=1)
-            shared_features = self.projector(combined_features)
         
+        # Project combined features
+        shared_features = self.projector(combined_features)
+        
+        # Classification heads
         text_logits = self.text_classifier(shared_features)
         image_logits = self.image_classifier(shared_features)
         multi_logits = self.multi_classifier(shared_features)
         
+        # Final logits
         final_logits = torch.zeros((shared_features.size(0), 4), device=shared_features.device)
         final_logits[:, 0] = multi_logits[:, 1]
         final_logits[:, 1] = text_logits[:, 1]
         final_logits[:, 2] = image_logits[:, 1]
         final_logits[:, 3] = 1 - (multi_logits[:, 1] + text_logits[:, 1] + image_logits[:, 1]).clamp(0, 1)
         
+        # Calculate loss if labels are provided
         loss = None
         if labels is not None:
             criterion = FocalLoss()
             loss = criterion(final_logits, labels)
-            
+        
         return {'loss': loss, 'logits': final_logits} if loss is not None else final_logits
-

@@ -1,7 +1,7 @@
-!CUDA_LAUNCH_BLOCKING=1 python main.py \
+python main.py \
     --mode train \
-    --train_json "/kaggle/input/vimmsd/vimmsd-train.json" \
-    --train_image_folder "/kaggle/input/vimmsd/train-images" \
+    --train_json "data/vimmsd-train.json" \
+    --train_image_folder "data/train-images" \
     --tokenizer "vinai/phobert-base-v2" \
     --text_encoder "vinai/phobert-base-v2" \
     --image_encoder "google/vit-base-patch16-224" \

@@ -85,7 +85,6 @@ class BaseSarcasmDataset(Dataset):
                 'labels': torch.tensor(item['label_id'], dtype=torch.long) if 'label_id' in item else None
             }
         else:
-            # Nếu không có 'label', chỉ trả về image, input_ids, attention_mask
             return {
                 'image': image,
                 'caption': item['caption'],

@@ -93,20 +93,6 @@ def main():
         logging.error("Encoder initialization failed.")
         return
     
-    # Add special tokens to tokenizer
-    if args.active_ocr:
-        special_tokens = {"additional_special_tokens": ["[OCR]", "[CAPTION]"]}
-        tokenizer.add_special_tokens(special_tokens)
-        logging.info("Tokenizer special tokens added.")
-    
-        # Resize token embeddings to accommodate new tokens
-        try:
-            text_encoder.resize_token_embeddings(len(tokenizer))
-            logging.info("Token embeddings resized to accommodate new tokens.")
-        except Exception as e:
-            logging.error(f"Failed to resize token embeddings: {e}")
-            return
-    
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logging.info(f"Using device: {device}")
     
