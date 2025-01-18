@@ -81,12 +81,12 @@ class VietnameseSarcasmClassifier(nn.Module):
         logging.info("Classification heads initialized.")        
 
     def preprocess_data(self, images, texts, is_test=False):
-        train_path = "/kaggle/input/vimmsd-training-dataset/training-images/train-images/"
-        test_path = "/kaggle/input/vimmsd-public-test/public-test-images/dev-images/"
+        train_path = "/kaggle/input/vimmsd/train-images"
+        test_path = "/kaggle/input/vimmsd/test-images"
         image_features = []
         total_images = len(images)
 
-        input_csv_file_path = ("/kaggle/input/ocr-text-dsc-2024/private_test_ocr.csv" if is_test else "/kaggle/input/ocr-text-dsc-2024/train_ocr.csv")
+        input_csv_file_path = ("/kaggle/input/ocr-cache/paddle_test_ocr_cache.json" if is_test else "/kaggle/input/ocr-cache/paddle_train_ocr_cache.json")
 
         if os.path.exists(input_csv_file_path):
             df = pd.read_csv(input_csv_file_path)
