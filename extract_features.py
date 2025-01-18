@@ -52,14 +52,19 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
                 "label_id": label_to_id.get(item["label"], 3) # Correctly access "label" and map to ID
             })
 
-    # Save features and labels
+        elif mode == "test":
+            # For test mode, you might just want to store item IDs or other identifiers
+            all_labels.append({
+                "item_id": item_id
+            })
+
+    # Save features and labels (or identifiers for test mode)
     os.makedirs(output_dir, exist_ok=True)
     np.save(os.path.join(output_dir, "image_features.npy"), np.array(all_image_features))
     np.save(os.path.join(output_dir, "text_features.npy"), np.array(all_text_features))
     
-    if mode == "train":
-        with open(os.path.join(output_dir, "labels.json"), "w", encoding="utf-8") as f:
-            json.dump(all_labels, f, indent=2)
+    with open(os.path.join(output_dir, "labels.json"), "w", encoding="utf-8") as f:
+        json.dump(all_labels, f, indent=2)
 
     print(f"Features saved to {output_dir}")
 
