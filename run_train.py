@@ -126,7 +126,7 @@ def run_train(train_json, train_image_folder, text_tokenizer, device,
     
     # Extract labels for stratified splitting
     try:
-        labels = [dataset[i]['labels'].item() for i in tqdm(range(len(dataset)), desc='Extracting labels')]
+        labels = [dataset[i]['label'].item() for i in tqdm(range(len(dataset)), desc='Extracting labels')]
     except Exception as e:
         logging.error(f"Failed to extract labels for stratified splitting: {e}")
         return
