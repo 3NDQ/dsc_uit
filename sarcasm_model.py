@@ -92,7 +92,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         final_logits[:, 1] = text_logits[:, 1]
         final_logits[:, 2] = image_logits[:, 1]
         final_logits[:, 3] = 1 - (multi_logits[:, 1] + text_logits[:, 1] + image_logits[:, 1]).clamp(0, 1)
-        final_logits.device
+        device = final_logits.device
         loss = None
         image_count = 442
         text_count = 77
