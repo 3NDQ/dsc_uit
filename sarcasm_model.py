@@ -72,7 +72,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         # Define the output layer
         combined_size = 0
         if self.fusion_method == 'concat':
-          combined_size = 768 + 768 + 768 #vit + jina text + jina ocr
+          combined_size = 768 + 768 + 768 
         elif self.fusion_method == 'cross_attention':
           combined_size = 768 + 768 + 768+768
         elif self.fusion_method == 'attention':

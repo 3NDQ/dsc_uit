@@ -47,8 +47,19 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
 
             optimizer.zero_grad()
             
+            image_names = batch['image_name']
+            captions = batch['caption']
+            labels = batch['label']
+            
             with torch.amp.autocast(device_type=device_type):
-                outputs = model(**batch_on_device)
+                # In run_train.py, train_model function:
+                outputs = model(
+                    image=image_names,
+                    caption=captions,
+                    labels=labels,
+                    mode='train'
+                )
+                loss, logits = outputs # Unpack the tuple
                 loss = outputs['loss']
 
             scaler.scale(loss).backward()
