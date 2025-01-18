@@ -96,7 +96,7 @@ def run_test(test_json, test_image_folder, tokenizer,
         
         output = {
             "results": results,
-            "phase": "dev"
+            "phase": "test"
         }
         
         try:

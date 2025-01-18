@@ -109,7 +109,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         alpha = [alpha_multi, alpha_text, alpha_image, alpha_not]
         alpha_sum = sum(alpha)
         alpha = [a / alpha_sum for a in alpha]
-        print(alpha)
+        # print(alpha)
         if labels is not None:
             criterion = FocalLoss(alpha = alpha, gamma=2, reduction="mean")
             # print(type(final_logits), type(labels))
