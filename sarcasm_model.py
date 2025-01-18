@@ -124,7 +124,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         for i, image_name in enumerate(images, 1):
             try:
                 print(f"Processing image {i}/{total_images}", end='\r')
-                image_path = os.path.join(train_path if not is_test else test_path, image_name)
+                image_path = os.path.join(train_path if mode == 'train' else test_path, image_name)
                 img = cv2.imread(image_path)
 
                 # Process the image using ViT model
