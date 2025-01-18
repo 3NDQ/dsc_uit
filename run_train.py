@@ -24,7 +24,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     )
 
     early_stopping = EarlyStopping(patience=patience)
-    scaler = torch.amp.GradScaler(device_type="cuda") # Updated for deprecation warning
+    scaler = torch.amp.GradScaler() # Updated for deprecation warning
     
     best_models = []  # List to store the top 5 models based on F1 score
 
