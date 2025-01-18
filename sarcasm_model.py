@@ -134,7 +134,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                 vit_features = vit_outputs.last_hidden_state[:, 0, :].cpu().numpy().squeeze()
 
                 if image_name in existing_images:
-                    combined_text = df[df["image_name"] == image_name]["combined_text"].values[0]
+                    combined_text = df[df["image_path"] == image_name]["ocr_text"].values[0]
                 else:
                     combined_text = ""
 
