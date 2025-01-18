@@ -98,7 +98,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     
     return model
 
-def run_train(train_json, train_image_folder, tokenizer, device, 
+def run_train(train_json, train_image_folder, text_tokenizer, device, 
                       num_epochs, patience, batch_size, num_workers, train_ocr_cache_path,
                       text_encoder, image_encoder, image_processor, learning_rate, 
                       val_size, random_state, fusion_method, use_train_ocr_cache=False, active_ocr=True):
@@ -108,7 +108,7 @@ def run_train(train_json, train_image_folder, tokenizer, device,
     dataset = TrainSarcasmDataset(
         data_path=train_json, 
         image_folder=train_image_folder, 
-        text_tokenizer=tokenizer, 
+        text_tokenizer=text_tokenizer, 
         use_ocr_cache=use_train_ocr_cache, 
         ocr_cache_path=train_ocr_cache_path,
         active_ocr=active_ocr
@@ -156,7 +156,15 @@ def run_train(train_json, train_image_folder, tokenizer, device,
     
     # Initialize model with passed encoders
     try:
-        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method, image_processor).to(device)
+        model = VietnameseSarcasmClassifier(mode="train",
+                                            text_encoder=text_encoder,
+                                            text_tokenizer=text_tokenizer,
+                                            image_processor=image_processor,
+                                            image_encoder=image_encoder,
+                                            train_image_folder=train_image_folder,   
+                                            train_ocr_cache_path=train_ocr_cache_path,  
+                                            fusion_method=fusion_method
+                                            ).to(device)
         logging.info('Model initialized and moved to device')
     except Exception as e:
         logging.error(f"Failed to initialize the model: {e}")
@@ -165,10 +173,10 @@ def run_train(train_json, train_image_folder, tokenizer, device,
     # Train the model
     logging.info('Start training model...')
     model = train_model(
-        model, 
+        model,
         train_dataloader, 
         val_dataloader, 
-        device, 
+        device,    
         num_epochs=num_epochs, 
         patience=patience,
         learning_rate=learning_rate

@@ -8,6 +8,7 @@ import cv2
 import pandas as pd
 import os
 from transformers import AutoProcessor, AutoModel, AutoTokenizer
+import json
 
 class FocalLoss(nn.Module):
     def __init__(self, alpha=1, gamma=2, reduction='mean'):
@@ -29,12 +30,29 @@ class FocalLoss(nn.Module):
             return focal_loss
 
 class VietnameseSarcasmClassifier(nn.Module):
-    def __init__(self, text_encoder, image_encoder, fusion_method='concat', image_processor=None, num_labels=4):
+    def __init__(self,
+                 mode,
+                 text_encoder,
+                 text_tokenizer,
+                 image_encoder,
+                 train_image_folder,
+                 test_image_folder,
+                 train_ocr_cache_path,
+                 test_ocr_cache_path,
+                 image_processor=None,
+                 fusion_method='concat',
+                 num_labels=4):
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
+        self.mode = mode
         self.image_encoder = image_encoder
         self.text_encoder = text_encoder
+        self.text_tokenizer = text_tokenizer
+        self.train_path = train_image_folder
+        self.test_path = test_image_folder
         self.fusion_method = fusion_method
+        self.train_ocr_cache_path = train_ocr_cache_path
+        self.test_ocr_cache_path = test_ocr_cache_path
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Initialize ViT model and processor
@@ -43,7 +61,7 @@ class VietnameseSarcasmClassifier(nn.Module):
 
         # Initialize Jina model and tokenizer
         self.jina_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v2-base-en", model_max_length=512)
-        self.jina_model = AutoModel.from_pretrained("jinaai/jina-embeddings-v2-base-en").to(self.device)
+        self.text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v2-base-en").to(self.device)
 
         combined_dim = self.image_encoder.config.hidden_size + self.text_encoder.config.hidden_size
         logging.info(f"Combined dimension: {combined_dim}")
@@ -80,20 +98,27 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.multi_classifier = nn.Linear(512, 2)
         logging.info("Classification heads initialized.")        
 
-    def preprocess_data(self, images, texts, is_test=False):
+    def preprocess_data(self, images, texts, mode='train'):
         train_path = "/kaggle/input/vimmsd/train-images"
         test_path = "/kaggle/input/vimmsd/test-images"
         image_features = []
+        ocr_features = []
         total_images = len(images)
 
-        input_csv_file_path = ("/kaggle/input/ocr-cache/paddle_test_ocr_cache.json" if is_test else "/kaggle/input/ocr-cache/paddle_train_ocr_cache.json")
+        input_json_file_path = self.test_ocr_cache_path if mode == 'test' else self.test_ocr_cache_path
 
-        if os.path.exists(input_csv_file_path):
-            df = pd.read_csv(input_csv_file_path)
-            existing_images = df["image_name"].tolist()
-            df["combined_text"] = df["combined_text"].fillna("").astype(str)
+        if os.path.exists(input_json_file_path):
+            with open(input_json_file_path, 'r', encoding='utf-8') as f:
+                json_data = json.load(f)
+            data = []
+            for image_path, text in json_data.items():
+                image_name = os.path.basename(image_path)
+                data.append({"image_path": image_name, "ocr_text": text})
+            df = pd.DataFrame(data)
+            existing_images = df["image_path"].tolist()
+            df["ocr_text"] = df["ocr_text"].fillna("").astype(str)
         else:
-            raise FileNotFoundError(f"OCR CSV file not found at {input_csv_file_path}")
+            raise FileNotFoundError(f"JSON file not found at {input_json_file_path}")
 
         print("\nProcessing images:")
         for i, image_name in enumerate(images, 1):
