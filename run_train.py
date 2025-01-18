@@ -160,9 +160,6 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     ).to(device)
     logging.info('Model initialized and moved to device')
 
-    # Update Focal Loss with class weights
-    model.loss_fct = FocalLoss(alpha=class_weights_tensor, gamma=model.gamma)
-
     # Train the model
     logging.info('Start training model...')
     model = train_model(
