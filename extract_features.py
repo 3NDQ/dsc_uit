@@ -53,7 +53,6 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
             })
 
         elif mode == "test":
-            # For test mode, you might just want to store item IDs or other identifiers
             all_labels.append({
                 "item_id": item_id
             })

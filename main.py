@@ -1,4 +1,4 @@
-# main.py 
+# main.py
 import os
 import torch
 import argparse
@@ -13,27 +13,27 @@ def main():
         level=logging.INFO,
         format='%(asctime)s [%(levelname)s] %(message)s',
         handlers=[
-            logging.StreamHandler(sys.stdout),  
-            logging.FileHandler("sarcasm_classifier.log")  
+            logging.StreamHandler(sys.stdout),
+            logging.FileHandler("sarcasm_classifier.log")
         ],
         force=True
     )
     parser = argparse.ArgumentParser(description="Vietnamese Sarcasm Classifier")
-    
+
     # Mode: train or test
     parser.add_argument('--mode', type=str, choices=['train', 'test'], required=True, help='Mode: train or test')
-    
+
     # Encoder arguments
     parser.add_argument('--text_encoder', type=str, default="jinaai/jina-embeddings-v2-base-en", help='Name/path of the text encoder model')
     parser.add_argument('--image_encoder', type=str, default="google/vit-base-patch16-224-in21k", help='Name/path of the image encoder model')
-    
+
     # Paths to pre-extracted features
     parser.add_argument('--train_features_dir', type=str, default='train_features', help='Directory containing pre-extracted training features')
     parser.add_argument('--test_features_dir', type=str, default='test_features', help='Directory containing pre-extracted testing features')
-    
+
     # Model paths for testing
     parser.add_argument('--model_paths', type=str, nargs='+', default=['model_epoch_1.pth'], help='Paths to trained models')
-    
+
     # Common arguments
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size for training and testing')
     parser.add_argument('--num_workers', type=int, default=4, help='Number of worker threads for data loading')
@@ -45,6 +45,9 @@ def main():
     parser.add_argument('--val_size', type=float, default=0.2, help='Val size for train test split')
     parser.add_argument('--random_state', type=int, default=42, help='Random state')
     parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention', 'cross_attention'], help='Method to fuse features: concat (default) or attention, cross_attention')
+
+    # Hyperparameters for Focal Loss
+    parser.add_argument('--gamma', type=float, default=2.0, help='Gamma parameter for Focal Loss')
 
     args = parser.parse_args()
 
@@ -73,6 +76,7 @@ def main():
             learning_rate=args.learning_rate,
             val_size=args.val_size,
             random_state=args.random_state,
+            gamma=args.gamma  # Pass gamma to run_train
         )
     elif args.mode == 'test':
         run_test(
