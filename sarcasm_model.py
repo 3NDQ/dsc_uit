@@ -36,9 +36,9 @@ class VietnameseSarcasmClassifier(nn.Module):
                  text_tokenizer,
                  image_encoder,
                  train_image_folder,
-                 test_image_folder,
                  train_ocr_cache_path,
-                 test_ocr_cache_path,
+                 test_image_folder=None,
+                 test_ocr_cache_path=None,
                  image_processor=None,
                  fusion_method='concat',
                  num_labels=4):
