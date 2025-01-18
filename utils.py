@@ -18,7 +18,6 @@ class SelfAttention(nn.Module):
         queries=x.matmul(self.W_query)
         values=x.matmul(self.W_value)
         
-        # unnormalized attention weights
         attn_scores=queries.matmul(keys.T)
         
         attn_weights=torch.softmax(
@@ -48,7 +47,6 @@ class CrossAttention(nn.Module):
         
         context_vec=attn_weights.matmul(values_2)
         return context_vec
-
 class EarlyStopping:
     def __init__(self, patience=5, min_delta=0):
         self.patience = patience
@@ -91,15 +89,15 @@ def evaluate_model(model, dataloader, device):
             
             outputs = model(**batch_on_device)
 
-            if 'loss' in outputs and batch_on_device.get('labels') is not None:
+            if 'loss' in outputs and batch_on_device.get('label') is not None:
                 total_loss += outputs['loss'].item()
 
             logits = outputs['logits']
             preds = torch.argmax(logits, dim=1)
 
             all_preds.extend(preds.cpu().numpy())
-            if batch_on_device.get('labels') is not None:
-              all_labels.extend(batch_on_device['labels'].cpu().numpy())
+            if batch_on_device.get('label') is not None:
+              all_labels.extend(batch_on_device['label'].cpu().numpy())
     
     # Define class labels
     labels = ['multi-sarcasm', 'text-sarcasm', 'image-sarcasm', 'not-sarcasm']

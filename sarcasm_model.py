@@ -3,12 +3,6 @@ import torch.nn as nn
 import logging
 from utils import CrossAttention, SelfAttention
 import numpy as np
-from tqdm import tqdm
-import cv2
-import pandas as pd
-import os
-from transformers import AutoProcessor, AutoModel, AutoTokenizer
-import json
 
 class FocalLoss(nn.Module):
     def __init__(self, alpha=1, gamma=2, reduction='mean'):
@@ -28,17 +22,12 @@ class FocalLoss(nn.Module):
             return focal_loss.sum()
         else:
             return focal_loss
+
 class VietnameseSarcasmClassifier(nn.Module):
     def __init__(self,
                  mode,
                  text_encoder,
-                 text_tokenizer,
                  image_encoder,
-                 train_image_folder,
-                 train_ocr_cache_path,
-                 test_image_folder=None,
-                 test_ocr_cache_path=None,
-                 image_processor=None,
                  fusion_method='concat',
                  num_labels=4):
         super(VietnameseSarcasmClassifier, self).__init__()
@@ -46,28 +35,15 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.mode = mode
         self.image_encoder = image_encoder
         self.text_encoder = text_encoder
-        self.text_tokenizer = text_tokenizer
-        self.train_path = train_image_folder
-        self.test_path = test_image_folder
         self.fusion_method = fusion_method
-        self.train_ocr_cache_path = train_ocr_cache_path
-        self.test_ocr_cache_path = test_ocr_cache_path
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-        # Initialize ViT model and processor
-        self.vit_processor = image_processor
-        self.vit_model = image_encoder
-
-        # Initialize Jina model and tokenizer
-        self.text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True)
-        self.text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True).to(self.device)
 
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
-            self.text_to_image_attention = CrossAttention(in_features=768, out_features=768)
-            self.image_to_text_attention = CrossAttention(in_features=768+768, out_features=768+768) #768 for ViT, 768 for Jina from ocr
+            self.text_to_image_attention = CrossAttention(d_in=768, d_out_kq=768, d_out_v=768)
+            self.image_to_text_attention = CrossAttention(d_in=768+768, d_out_kq=768+768, d_out_v=768+768)
         elif self.fusion_method == 'attention':
-            self.self_attention = SelfAttention(in_features=768+768+768)
+            self.self_attention = SelfAttention(d_in=768+768+768, d_out_kq=768+768+768, d_out_v=768+768+768)
             
         # Define the output layer
         combined_size = 0
@@ -78,105 +54,8 @@ class VietnameseSarcasmClassifier(nn.Module):
         elif self.fusion_method == 'attention':
           combined_size = 768 + 768 + 768
         self.fc = nn.Linear(combined_size, num_labels)
-        
 
-    def preprocess_data(self, images, texts, mode='train'):
-        train_path = "/kaggle/input/vimmsd/train-images"
-        test_path = "/kaggle/input/vimmsd/test-images"
-        image_features = []
-        ocr_features = []
-        total_images = len(images)
-
-        input_json_file_path = self.test_ocr_cache_path if mode == 'test' else self.train_ocr_cache_path
-
-        if os.path.exists(input_json_file_path):
-            with open(input_json_file_path, 'r', encoding='utf-8') as f:
-                json_data = json.load(f)
-            data = []
-            for image_path, text in json_data.items():
-                image_name = os.path.basename(image_path)
-                data.append({"image_path": image_name, "ocr_text": text})
-            df = pd.DataFrame(data)
-            existing_images = df["image_path"].tolist()
-            df["ocr_text"] = df["ocr_text"].fillna("").astype(str)
-        else:
-            raise FileNotFoundError(f"JSON file not found at {input_json_file_path}")
-
-        for i, image_name in enumerate(images, 1):
-            try:
-                image_path = os.path.join(train_path if mode == 'train' else test_path, image_name)
-                img = cv2.imread(image_path)
-
-                # Process the image using ViT model
-                inputs = self.vit_processor(images=img, return_tensors="pt").to(self.device)
-                with torch.no_grad():
-                    vit_outputs = self.vit_model(**inputs)
-                vit_features = vit_outputs.last_hidden_state[:, 0, :].cpu().numpy().squeeze()
-
-                if image_name in existing_images:
-                    combined_text = df[df["image_path"] == image_name]["ocr_text"].values[0]
-                else:
-                    combined_text = ""
-
-                if combined_text.strip():
-                    # Use Jina tokenizer and model for text processing
-                    text_inputs = self.text_tokenizer(
-                        combined_text,
-                        return_tensors="pt", 
-                        padding="longest",
-                        truncation=True, 
-                        max_length=512
-                    ).to(self.device)
-
-                    with torch.no_grad():
-                        jina_outputs = self.text_encoder(**text_inputs)
-
-                    # Extract Jina features - it returns 1024-dimensional embeddings
-                    jina_features = jina_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
-                    combined_features = np.concatenate([vit_features, jina_features])
-                else:
-                    combined_features = np.concatenate([vit_features, np.zeros(self.text_encoder.config.hidden_size)])
-
-                image_features.append(combined_features)
-
-            except Exception as e:
-                print(f"\nError processing image {image_name}: {str(e)}")
-                image_features.append(np.zeros(self.vit_model.config.hidden_size + self.text_encoder.config.hidden_size))
-
-        text_features = []
-        total_texts = len(texts)
-        for i, text in enumerate(texts, 1):
-            try:
-                # Use Jina tokenizer and model for text processing
-                inputs = self.text_tokenizer(
-                    text, 
-                    return_tensors="pt", 
-                    padding="longest",
-                    truncation=True, 
-                    max_length=512
-                ).to(self.device)
-
-                with torch.no_grad():
-                    jina_outputs = self.text_encoder(**inputs)
-
-                # Extract Jina features (1024-dimensional)
-                jina_feature = jina_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
-                text_features.append(jina_feature)
-
-            except Exception as e:
-                print(f"\nError processing text: {str(e)}")
-                text_features.append(np.zeros(self.text_encoder.config.hidden_size))
-
-        return np.array(image_features), np.array(text_features)
-
-    def forward(self, image, caption, labels=None, mode='train'):
-        logging.debug("Forward pass started.")
-
-        # Preprocess data
-        image_features, text_features = self.preprocess_data(image, caption, mode=mode)
-        image_features = torch.tensor(image_features, dtype=torch.float).to(self.device)
-        text_features = torch.tensor(text_features, dtype=torch.float).to(self.device)
-        
+    def forward(self, image_features, text_features, labels=None):
         # Combine features based on fusion method
         if self.fusion_method == 'cross_attention':
             attended_text = self.text_to_image_attention(text_features, image_features)
@@ -195,8 +74,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         if labels is not None:
             # Calculate loss using Focal Loss
             loss_fct = FocalLoss()
-            labels = labels.to(self.device)
             loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             return loss, logits
         else:
-            return logits
+            return logits   
