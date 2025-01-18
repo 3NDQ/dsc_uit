@@ -63,40 +63,13 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True)
         self.text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True).to(self.device)
 
-        combined_dim = self.image_encoder.config.hidden_size + self.text_encoder.config.hidden_size
-        logging.info(f"Combined dimension: {combined_dim}")
-        
-        if self.fusion_method == 'cross_attention':
-            hidden_size = self.image_encoder.config.hidden_size
-            self.text_to_image_attention = CrossAttention(d_in=hidden_size, d_out_kq=hidden_size, d_out_v=hidden_size)
-            self.image_to_text_attention = CrossAttention(d_in=hidden_size, d_out_kq=hidden_size, d_out_v=hidden_size)
-            logging.info("Cross-Attention layers initialized for both text-to-image and image-to-text.")
-        
-        elif self.fusion_method == 'attention':
-            self.self_attention = SelfAttention(d_in=combined_dim, d_out_kq=combined_dim, d_out_v=combined_dim)
-            logging.info("Self-Attention layer initialized for feature fusion.")
-        
-        self.projector = nn.Sequential(
-            nn.Linear(combined_dim, 1024),
-            nn.LayerNorm(1024),
-            nn.ReLU(),
-            nn.Dropout(0.1),
-            nn.Linear(1024, 768),
-            nn.LayerNorm(768),
-            nn.ReLU(),
-            nn.Dropout(0.1),
-            nn.Linear(768, 512),
-            nn.LayerNorm(512),
-            nn.ReLU(),
-            nn.Dropout(0.1)
-        )
-        logging.info("Projector layers initialized.")
-        
-        # Classification heads
-        self.text_classifier = nn.Linear(512, 2)
-        self.image_classifier = nn.Linear(512, 2)
-        self.multi_classifier = nn.Linear(512, 2)
-        logging.info("Classification heads initialized.")        
+        # Initialize attention layers
+        self.self_attention = SelfAttention(dim=image_encoder.config.hidden_size + text_encoder.config.hidden_size)
+        self.text_to_image_attention = CrossAttention(dim=text_encoder.config.hidden_size, dim_context=image_encoder.config.hidden_size)
+        self.image_to_text_attention = CrossAttention(dim=image_encoder.config.hidden_size, dim_context=text_encoder.config.hidden_size)
+
+        # Final classification layer
+        self.classifier = nn.Linear(image_encoder.config.hidden_size + text_encoder.config.hidden_size, num_labels)
 
     def preprocess_data(self, images, texts, mode='train'):
         train_path = "/kaggle/input/vimmsd/train-images"
@@ -200,7 +173,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         image_features, text_features = self.preprocess_data(image, caption, mode=mode)
         image_features = torch.tensor(image_features, dtype=torch.float).to(self.device)
         text_features = torch.tensor(text_features, dtype=torch.float).to(self.device)
-
+        
         # Combine features based on fusion method
         if self.fusion_method == 'cross_attention':
             attended_text = self.text_to_image_attention(text_features, image_features)
@@ -213,25 +186,26 @@ class VietnameseSarcasmClassifier(nn.Module):
         else:
             combined_features = torch.cat((image_features, text_features), dim=1)
 
-        # Project combined features
-        shared_features = self.projector(combined_features)
+        # Pass through the classifier
+        logits = self.classifier(combined_features)
 
-        # Classification heads
-        text_logits = self.text_classifier(shared_features)
-        image_logits = self.image_classifier(shared_features)
-        multi_logits = self.multi_classifier(shared_features)
-
-        # Final logits
-        final_logits = torch.zeros((shared_features.size(0), 4), device=shared_features.device)
-        final_logits[:, 0] = multi_logits[:, 1]
-        final_logits[:, 1] = text_logits[:, 1]
-        final_logits[:, 2] = image_logits[:, 1]
-        final_logits[:, 3] = 1 - (multi_logits[:, 1] + text_logits[:, 1] + image_logits[:, 1]).clamp(0, 1)
-
-        # Calculate loss if labels are provided
-        loss = None
+        # Compute loss if labels are provided
         if labels is not None:
-            criterion = FocalLoss()
-            loss = criterion(final_logits, labels)
+            labels = torch.tensor(labels, dtype=torch.long).to(self.device)
+            loss_fct = FocalLoss()
+            loss = loss_fct(logits, labels)
+            return loss, logits
+        else:
+            return logits
 
-        return {'loss': loss, 'logits': final_logits} if loss is not None else {'logits': final_logits}
+    def self_attention(self, x):
+        """Self-attention mechanism."""
+        return self.self_attention(x)
+
+    def text_to_image_attention(self, text_features, image_features):
+        """Cross-attention from text to image features."""
+        return self.text_to_image_attention(text_features, image_features)
+
+    def image_to_text_attention(self, image_features, text_features):
+        """Cross-attention from image to text features."""
+        return self.image_to_text_attention(image_features, text_features)
