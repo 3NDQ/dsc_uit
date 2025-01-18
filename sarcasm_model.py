@@ -60,7 +60,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.vit_model = image_encoder
 
         # Initialize Jina model and tokenizer
-        self.jina_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True)
+        self.text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True)
         self.text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True).to(self.device)
 
         combined_dim = self.image_encoder.config.hidden_size + self.text_encoder.config.hidden_size
@@ -140,7 +140,7 @@ class VietnameseSarcasmClassifier(nn.Module):
 
                 if combined_text.strip():
                     # Use Jina tokenizer and model for text processing
-                    text_inputs = self.jina_tokenizer(
+                    text_inputs = self.text_tokenizer(
                         combined_text,
                         return_tensors="pt", 
                         padding="longest",
@@ -149,19 +149,19 @@ class VietnameseSarcasmClassifier(nn.Module):
                     ).to(self.device)
 
                     with torch.no_grad():
-                        jina_outputs = self.jina_model(**text_inputs)
+                        jina_outputs = self.text_encoder(**text_inputs)
 
                     # Extract Jina features - it returns 1024-dimensional embeddings
                     jina_features = jina_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
                     combined_features = np.concatenate([vit_features, jina_features])
                 else:
-                    combined_features = np.concatenate([vit_features, np.zeros(self.jina_model.config.hidden_size)])
+                    combined_features = np.concatenate([vit_features, np.zeros(self.text_encoder.config.hidden_size)])
 
                 image_features.append(combined_features)
 
             except Exception as e:
                 print(f"\nError processing image {image_name}: {str(e)}")
-                image_features.append(np.zeros(self.vit_model.config.hidden_size + self.jina_model.config.hidden_size))
+                image_features.append(np.zeros(self.vit_model.config.hidden_size + self.text_encoder.config.hidden_size))
 
         print("\nProcessing texts:")
         text_features = []
@@ -171,7 +171,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                 print(f"Processing text {i}/{total_texts}", end='\r')
 
                 # Use Jina tokenizer and model for text processing
-                inputs = self.jina_tokenizer(
+                inputs = self.text_tokenizer(
                     text, 
                     return_tensors="pt", 
                     padding="longest",
@@ -180,7 +180,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                 ).to(self.device)
 
                 with torch.no_grad():
-                    jina_outputs = self.jina_model(**inputs)
+                    jina_outputs = self.text_encoder(**inputs)
 
                 # Extract Jina features (1024-dimensional)
                 jina_feature = jina_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
@@ -188,7 +188,7 @@ class VietnameseSarcasmClassifier(nn.Module):
 
             except Exception as e:
                 print(f"\nError processing text: {str(e)}")
-                text_features.append(np.zeros(self.jina_model.config.hidden_size))
+                text_features.append(np.zeros(self.text_encoder.config.hidden_size))
 
         print("\nPreprocessing completed!")
         return np.array(image_features), np.array(text_features)
