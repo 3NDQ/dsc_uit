@@ -56,7 +56,7 @@ class BaseSarcasmDataset(Dataset):
             return {
                 'image': image_name,
                 'caption': item['caption'],
-                'labels': torch.tensor(item['label_id'], dtype=torch.long) if 'label_id' in item else None
+                'label': torch.tensor(item['label_id'], dtype=torch.long) if 'label_id' in item else None
             }
         else:
             return {
