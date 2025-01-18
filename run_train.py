@@ -16,43 +16,50 @@ from utils import evaluate_model
 
 def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate):
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-    
+
     num_training_steps = len(train_dataloader) * num_epochs
     num_warmup_steps = num_training_steps // 10
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_training_steps
     )
-    
+
     early_stopping = EarlyStopping(patience=patience)
-    scaler = torch.cuda.amp.GradScaler()  # For mixed precision training
+    scaler = torch.amp.GradScaler(device_type="cuda") # Updated for deprecation warning
     
     best_models = []  # List to store the top 5 models based on F1 score
-    
+
     for epoch in range(num_epochs):
         model.train()
         total_loss = 0
-        
+
         train_progress = tqdm(train_dataloader, desc=f"Training Epoch {epoch+1}/{num_epochs}", leave=False)
-        
+
         for batch in train_progress:
-            batch = {k: v.to(device) for k, v in batch.items()}
+            # Move tensors to device, but keep OCR (list of strings) on CPU.
+            batch_on_device = {}
+            for k, v in batch.items():
+                if isinstance(v, torch.Tensor):
+                    batch_on_device[k] = v.to(device)
+                else:
+                    batch_on_device[k] = v
+
             device_type = "cuda" if torch.cuda.is_available() else "cpu"
-            
+
             optimizer.zero_grad()
 
             with torch.amp.autocast(device_type=device_type):
                 # Convert image to float16 if using autocast, otherwise keep it as float32.
                 if device_type == 'cuda': # check if using GPU and therefore autocast
-                  batch['image'] = batch['image'].half()
-                
-                outputs = model(**batch)
+                    batch_on_device['image'] = batch_on_device['image'].half()
+
+                outputs = model(**batch_on_device)
                 loss = outputs['loss']
-            
+
             scaler.scale(loss).backward()
             scaler.step(optimizer)
             scaler.update()
             scheduler.step()
-            
+
             total_loss += loss.item()
             train_progress.set_postfix(loss=loss.item())
         
