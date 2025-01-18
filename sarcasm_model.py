@@ -112,6 +112,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         print(alpha)
         if labels is not None:
             criterion = FocalLoss(alpha = alpha, gamma=2, reduction="mean")
+            print(type(final_logits), type(labels))
             loss = criterion(final_logits, labels)
 
         return {'loss': loss, 'logits': final_logits} if loss is not None else final_logits
