@@ -81,7 +81,7 @@ def main():
 
     # Initialize tokenizer using factory function
     try:
-        tokenizer = get_tokenizer(args.tokenizer)
+        text_tokenizer = get_tokenizer(args.text_tokenizer)
     except Exception:
         logging.error("Tokenizer initialization failed.")
         return
