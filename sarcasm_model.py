@@ -102,7 +102,6 @@ class VietnameseSarcasmClassifier(nn.Module):
         else:
             raise FileNotFoundError(f"JSON file not found at {input_json_file_path}")
 
-        print("\nProcessing images:")
         for i, image_name in enumerate(images, 1):
             try:
                 print(f"Processing image {i}/{total_images}", end='\r')
@@ -145,7 +144,6 @@ class VietnameseSarcasmClassifier(nn.Module):
                 print(f"\nError processing image {image_name}: {str(e)}")
                 image_features.append(np.zeros(self.vit_model.config.hidden_size + self.text_encoder.config.hidden_size))
 
-        print("\nProcessing texts:")
         text_features = []
         total_texts = len(texts)
         for i, text in enumerate(texts, 1):
@@ -172,7 +170,6 @@ class VietnameseSarcasmClassifier(nn.Module):
                 print(f"\nError processing text: {str(e)}")
                 text_features.append(np.zeros(self.text_encoder.config.hidden_size))
 
-        print("\nPreprocessing completed!")
         return np.array(image_features), np.array(text_features)
 
     def forward(self, image, caption, labels=None, mode='train'):
