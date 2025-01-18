@@ -28,7 +28,6 @@ class FocalLoss(nn.Module):
             return focal_loss.sum()
         else:
             return focal_loss
-
 class VietnameseSarcasmClassifier(nn.Module):
     def __init__(self,
                  mode,
@@ -63,13 +62,23 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True)
         self.text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True).to(self.device)
 
-        # Initialize attention layers
-        self.self_attention = SelfAttention(dim=image_encoder.config.hidden_size + text_encoder.config.hidden_size)
-        self.text_to_image_attention = CrossAttention(dim=text_encoder.config.hidden_size, dim_context=image_encoder.config.hidden_size)
-        self.image_to_text_attention = CrossAttention(dim=image_encoder.config.hidden_size, dim_context=text_encoder.config.hidden_size)
-
-        # Final classification layer
-        self.classifier = nn.Linear(image_encoder.config.hidden_size + text_encoder.config.hidden_size, num_labels)
+        # Define attention layers based on fusion method
+        if self.fusion_method == 'cross_attention':
+            self.text_to_image_attention = CrossAttention(in_features=768, out_features=768)
+            self.image_to_text_attention = CrossAttention(in_features=768+768, out_features=768+768) #768 for ViT, 768 for Jina from ocr
+        elif self.fusion_method == 'attention':
+            self.self_attention = SelfAttention(in_features=768+768+768)
+            
+        # Define the output layer
+        combined_size = 0
+        if self.fusion_method == 'concat':
+          combined_size = 768 + 768 + 768 #vit + jina text + jina ocr
+        elif self.fusion_method == 'cross_attention':
+          combined_size = 768 + 768 + 768+768
+        elif self.fusion_method == 'attention':
+          combined_size = 768 + 768 + 768
+        self.fc = nn.Linear(combined_size, num_labels)
+        
 
     def preprocess_data(self, images, texts, mode='train'):
         train_path = "/kaggle/input/vimmsd/train-images"
@@ -186,26 +195,14 @@ class VietnameseSarcasmClassifier(nn.Module):
         else:
             combined_features = torch.cat((image_features, text_features), dim=1)
 
-        # Pass through the classifier
-        logits = self.classifier(combined_features)
+        # Pass through the fully connected layer
+        logits = self.fc(combined_features)
 
-        # Compute loss if labels are provided
         if labels is not None:
-            labels = torch.tensor(labels, dtype=torch.long).to(self.device)
+            # Calculate loss using Focal Loss
             loss_fct = FocalLoss()
-            loss = loss_fct(logits, labels)
+            labels = labels.to(self.device)
+            loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             return loss, logits
         else:
             return logits
-
-    def self_attention(self, x):
-        """Self-attention mechanism."""
-        return self.self_attention(x)
-
-    def text_to_image_attention(self, text_features, image_features):
-        """Cross-attention from text to image features."""
-        return self.text_to_image_attention(text_features, image_features)
-
-    def image_to_text_attention(self, image_features, text_features):
-        """Cross-attention from image to text features."""
-        return self.image_to_text_attention(image_features, text_features)
