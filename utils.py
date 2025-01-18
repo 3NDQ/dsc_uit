@@ -4,7 +4,100 @@ import torch
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from tqdm import tqdm
 import logging
-
+class MultiHeadAttention(nn.Module):
+    def __init__(self, d_model, num_heads, dropout_rate=0.1):
+        super(MultiHeadAttention, self).__init__()
+        assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
+        
+        self.d_model = d_model  # Dimensionality of the input
+        self.num_heads = num_heads  # Number of attention heads
+        self.d_k = d_model // num_heads  # Dimensionality of each head's key, query, and value
+        
+        # Linear layers for query, key, value, and output
+        self.W_q = nn.Linear(d_model, d_model)
+        self.W_k = nn.Linear(d_model, d_model)
+        self.W_v = nn.Linear(d_model, d_model)
+        self.W_o = nn.Linear(d_model, d_model)
+        
+        # Dropout for regularization
+        self.dropout = nn.Dropout(dropout_rate)
+        
+    def scaled_dot_product_attention(self, Q, K, V, mask=None):
+        """
+        Computes scaled dot-product attention.
+        Args:
+            Q: Query tensor of shape (batch_size, num_heads, seq_len, d_k)
+            K: Key tensor of shape (batch_size, num_heads, seq_len, d_k)
+            V: Value tensor of shape (batch_size, num_heads, seq_len, d_k)
+            mask: Optional mask tensor of shape (batch_size, seq_len, seq_len)
+        Returns:
+            Attention output and attention weights
+        """
+        d_k = Q.size(-1)
+        scores = torch.matmul(Q, K.transpose(-2, -1)) / torch.sqrt(torch.tensor(d_k, dtype=torch.float32))
+        
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, float('-inf'))
+        
+        attn_weights = F.softmax(scores, dim=-1)
+        attn_weights = self.dropout(attn_weights)
+        output = torch.matmul(attn_weights, V)
+        
+        return output, attn_weights
+    
+    def split_heads(self, x):
+        """
+        Splits the input into multiple heads.
+        Args:
+            x: Input tensor of shape (batch_size, seq_len, d_model)
+        Returns:
+            Tensor of shape (batch_size, num_heads, seq_len, d_k)
+        """
+        batch_size, seq_len, d_model = x.size()
+        return x.view(batch_size, seq_len, self.num_heads, self.d_k).transpose(1, 2)
+    
+    def combine_heads(self, x):
+        """
+        Combines the outputs from multiple heads.
+        Args:
+            x: Tensor of shape (batch_size, num_heads, seq_len, d_k)
+        Returns:
+            Tensor of shape (batch_size, seq_len, d_model)
+        """
+        batch_size, _, seq_len, d_k = x.size()
+        return x.transpose(1, 2).contiguous().view(batch_size, seq_len, self.d_model)
+    
+    def forward(self, Q, K, V, mask=None):
+        """
+        Forward pass for multi-head attention.
+        Args:
+            Q: Query tensor of shape (batch_size, seq_len, d_model)
+            K: Key tensor of shape (batch_size, seq_len, d_model)
+            V: Value tensor of shape (batch_size, seq_len, d_model)
+            mask: Optional mask tensor of shape (batch_size, seq_len, seq_len)
+        Returns:
+            Output tensor of shape (batch_size, seq_len, d_model)
+        """
+        # Linear transformations
+        Q = self.W_q(Q)
+        K = self.W_k(K)
+        V = self.W_v(V)
+        
+        # Split into multiple heads
+        Q = self.split_heads(Q)
+        K = self.split_heads(K)
+        V = self.split_heads(V)
+        
+        # Scaled dot-product attention
+        attn_output, attn_weights = self.scaled_dot_product_attention(Q, K, V, mask)
+        
+        # Combine heads
+        attn_output = self.combine_heads(attn_output)
+        
+        # Final linear transformation
+        output = self.W_o(attn_output)
+        
+        return output
 class SelfAttention(nn.Module):
     def __init__(self, d_in, d_out_kq, d_out_v):
         super().__init__()
