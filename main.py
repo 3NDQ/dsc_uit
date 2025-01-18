@@ -4,7 +4,7 @@ import torch
 import argparse
 import sys
 import logging
-from model_factory import get_text_encoder, get_image_encoder, get_tokenizer, get_image_processor  
+from model_factory import get_text_encoder, get_image_encoder
 from run_train import run_train
 from run_test import run_test
 
@@ -23,16 +23,10 @@ def main():
     # Mode: train or test
     parser.add_argument('--mode', type=str, choices=['train', 'test'], required=True, help='Mode: train or test')
     
-    # Encoder arguments (still needed for model initialization)
+    # Encoder arguments
     parser.add_argument('--text_encoder', type=str, default="jinaai/jina-embeddings-v2-base-en", help='Name/path of the text encoder model')
     parser.add_argument('--image_encoder', type=str, default="google/vit-base-patch16-224-in21k", help='Name/path of the image encoder model')
     
-    # Data paths for feature extraction (used in extract_features.py)
-    parser.add_argument('--train_json', type=str, default='/kaggle/input/vimmsd-training-dataset/vimmsd-train.json', help='Path to the training JSON file')
-    parser.add_argument('--train_image_folder', type=str, default='/kaggle/input/vimmsd-training-dataset/training-images/train-images', help='Path to the training images folder')
-    parser.add_argument('--test_json', type=str, default='/kaggle/input/vimmsd-public-test/vimmsd-public-test.json', help='Path to the testing JSON file')
-    parser.add_argument('--test_image_folder', type=str, default='/kaggle/input/vimmsd-public-test/public-test-images/dev-images', help='Path to the testing images folder')
-
     # Paths to pre-extracted features
     parser.add_argument('--train_features_dir', type=str, default='train_features', help='Directory containing pre-extracted training features')
     parser.add_argument('--test_features_dir', type=str, default='test_features', help='Directory containing pre-extracted testing features')
@@ -43,12 +37,6 @@ def main():
     # Common arguments
     parser.add_argument('--batch_size', type=int, default=16, help='Batch size for training and testing')
     parser.add_argument('--num_workers', type=int, default=4, help='Number of worker threads for data loading')
-    
-    # OCR Caching arguments (used in extract_features.py)
-    parser.add_argument('--use_train_ocr_cache', action='store_true', help='Enable OCR caching for training')
-    parser.add_argument('--train_ocr_cache_path', type=str, default='train_ocr_cache.json', help='Path to store or load train OCR cache')
-    parser.add_argument('--use_test_ocr_cache', action='store_true', help='Enable OCR caching for testing')
-    parser.add_argument('--test_ocr_cache_path', type=str, default='test_ocr_cache.json', help='Path to store or load test OCR cache')
 
     # Training hyperparameters
     parser.add_argument('--num_epochs', type=int, default=20, help='Number of training epochs')

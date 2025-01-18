@@ -77,4 +77,4 @@ class VietnameseSarcasmClassifier(nn.Module):
             loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             return loss, logits
         else:
-            return logits   
+            return logits

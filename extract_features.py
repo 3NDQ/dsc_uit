@@ -1,3 +1,4 @@
+# extract_features.py
 import numpy as np
 import json
 import os
@@ -144,8 +145,8 @@ def preprocess_data(images, texts, vit_processor, vit_model, text_tokenizer, tex
 if __name__ == "__main__":
     # Example usage for training data:
     extract_and_save_features(
-        data_path="/kaggle/input/vimmsd/vimmsd-train.json",
-        image_folder="/kaggle/input/vimmsd/train-images",
+        data_path="/kaggle/input/vimmsd-training-dataset/vimmsd-train.json",
+        image_folder="/kaggle/input/vimmsd-training-dataset/training-images/train-images",
         ocr_cache_path="/kaggle/input/ocr-cache/paddle_train_ocr_cache.json",
         output_dir="train_features",
         mode="train"
@@ -153,9 +154,9 @@ if __name__ == "__main__":
 
     # Example usage for test data:
     extract_and_save_features(
-        data_path="/kaggle/input/vimmsd/vimmsd-private-test.json",
-        image_folder="/kaggle/input/vimmsd/test-images",
-        ocr_cache_path="/kaggle/input/ocr-cache/paddle_test_ocr_cache.json",
+        data_path="/kaggle/input/vimmsd-public-test/vimmsd-public-test.json",
+        image_folder="/kaggle/input/vimmsd-public-test/public-test-images/dev-images",
+        ocr_cache_path="test_ocr_cache.json",
         output_dir="test_features",
         mode="test"
     )

@@ -47,6 +47,7 @@ class CrossAttention(nn.Module):
         
         context_vec=attn_weights.matmul(values_2)
         return context_vec
+
 class EarlyStopping:
     def __init__(self, patience=5, min_delta=0):
         self.patience = patience
@@ -79,47 +80,41 @@ def evaluate_model(model, dataloader, device):
 
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating", leave=False):
-            # Move tensors to device, keep image names and captions on CPU.
-            batch_on_device = {}
-            for k, v in batch.items():
-                if isinstance(v, torch.Tensor):
-                    batch_on_device[k] = v.to(device)
-                else:
-                    batch_on_device[k] = v
-            
-            outputs = model(**batch_on_device)
+            image_features, text_features, labels = batch  # Adjusted for pre-extracted features
+            image_features = image_features.to(device)
+            text_features = text_features.to(device)
+            labels = labels.to(device)
 
-            if 'loss' in outputs and batch_on_device.get('label') is not None:
-                total_loss += outputs['loss'].item()
+            outputs = model(image_features=image_features, text_features=text_features, labels=labels) # Using pre-extracted features
+            loss, logits = outputs
 
-            logits = outputs['logits']
+            total_loss += loss.item()
             preds = torch.argmax(logits, dim=1)
 
             all_preds.extend(preds.cpu().numpy())
-            if batch_on_device.get('label') is not None:
-              all_labels.extend(batch_on_device['label'].cpu().numpy())
-    
+            all_labels.extend(labels.cpu().numpy())
+
     # Define class labels
     labels = ['multi-sarcasm', 'text-sarcasm', 'image-sarcasm', 'not-sarcasm']
-    
+
     # Calculate and log metrics for each class
     logging.info("\n----Class-wise Metrics----")
     for i, label in enumerate(labels):
         y_true = [1 if l == i else 0 for l in all_labels]
         y_pred = [1 if p == i else 0 for p in all_preds]
-        
+
         precision, recall, f1, _ = precision_recall_fscore_support(
             y_true, y_pred, average='binary', zero_division=0
         )
-        
+
         logging.info(f"{label}: precision: {precision:.4f}, recall: {recall:.4f}, f1 score: {f1:.4f}")
-    
+
     # Calculate overall metrics
     overall_acc = accuracy_score(all_labels, all_preds)
     overall_precision, overall_recall, overall_f1, _ = precision_recall_fscore_support(
         all_labels, all_preds, average='macro', zero_division=0
     )
-    
+
     # Log overall metrics
     logging.info("\n ----OVERALL----")
     average_loss = total_loss / len(dataloader) if len(dataloader) > 0 else 0
@@ -128,5 +123,5 @@ def evaluate_model(model, dataloader, device):
     logging.info(f"Overall Precision: {overall_precision:.4f}")
     logging.info(f"Overall Recall: {overall_recall:.4f}")
     logging.info(f"OVERALL F1 SCORE: {overall_f1:.4f}")
-    
+
     return overall_f1
