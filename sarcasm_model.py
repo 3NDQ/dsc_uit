@@ -44,10 +44,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                  image_encoder,
                  fusion_method='concat',
                  num_labels=4,
-                 gamma=2.0,
-                 dropout_rate=0.1,
-                 label_smoothing=0.1,
-                 num_heads=8):  # Multi-head attention heads
+                 gamma=2.0):
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
         self.mode = mode
@@ -56,36 +53,29 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.fusion_method = fusion_method
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.gamma = gamma
-        self.dropout_rate = dropout_rate
-        self.label_smoothing = label_smoothing
-        self.num_heads = num_heads
 
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
-            self.text_to_image_attention = MultiHeadAttention(d_model=768, num_heads=num_heads)
-            self.image_to_text_attention = MultiHeadAttention(d_model=768, num_heads=num_heads)
+            self.text_to_image_attention = CrossAttention(d_in=768, d_out_kq=768, d_out_v=768)
+            self.image_to_text_attention = CrossAttention(d_in=768, d_out_kq=768, d_out_v=768)
         elif self.fusion_method == 'attention':
-            self.self_attention = MultiHeadAttention(d_model=768 * 2, num_heads=num_heads)
-        
+            self.self_attention = SelfAttention(d_in=768+768, d_out_kq=768+768, d_out_v=768+768)
+
         # Define the output layer
         combined_size = 0
         if self.fusion_method == 'concat':
-            combined_size = 768 * 2  # Image + Text features
+          combined_size = 768 + 768  # Adjusted combined size
         elif self.fusion_method == 'cross_attention':
-            combined_size = 768 * 2  # Attended features
+          combined_size = 768 + 768
         elif self.fusion_method == 'attention':
-            combined_size = 768 * 2  # Self-attended features
-
-        # Add residual connections and layer normalization
-        self.residual_layer_norm = nn.LayerNorm(combined_size)
-        self.dropout = nn.Dropout(dropout_rate)
-
-        # Fully connected layer with Xavier initialization
+          combined_size = 768 + 768
         self.fc = nn.Linear(combined_size, num_labels)
-        nn.init.xavier_uniform_(self.fc.weight)  # Xavier initialization
 
-        # Focal Loss with label smoothing
-        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=[0.1, 0.4, 0.2, 0.1], label_smoothing=self.label_smoothing)
+        # Layer normalization
+        self.residual_layer_norm = nn.LayerNorm(combined_size)
+
+        # Initialize Focal Loss
+        self.loss_fct = FocalLoss(gamma=self.gamma)
 
     def forward(self, image_features, text_features, labels=None):
         # Combine features based on fusion method
@@ -97,18 +87,17 @@ class VietnameseSarcasmClassifier(nn.Module):
             combined_features = torch.cat((image_features, text_features), dim=1)
             attended_features = self.self_attention(combined_features)
             combined_features = attended_features
-        else:
+        else:  # Default: concatenation
             combined_features = torch.cat((image_features, text_features), dim=1)
 
-        # Add residual connection and layer normalization
-        combined_features = self.residual_layer_norm(combined_features + combined_features)  # Residual connection
-        combined_features = self.dropout(combined_features)  # Dropout
+        # Residual connection with layer normalization
+        combined_features = self.residual_layer_norm(combined_features + combined_features)
 
         # Pass through the fully connected layer
         logits = self.fc(combined_features)
 
         if labels is not None:
-            # Calculate loss using Focal Loss with label smoothing
+            # Calculate loss
             loss = self.loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             return loss, logits
         else:
