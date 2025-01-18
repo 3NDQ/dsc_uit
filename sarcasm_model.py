@@ -60,8 +60,8 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.vit_model = image_encoder
 
         # Initialize Jina model and tokenizer
-        self.jina_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v2-base-en", model_max_length=512)
-        self.text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v2-base-en").to(self.device)
+        self.jina_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True)
+        self.text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v2-base-en", trust_remote_code=True).to(self.device)
 
         combined_dim = self.image_encoder.config.hidden_size + self.text_encoder.config.hidden_size
         logging.info(f"Combined dimension: {combined_dim}")
