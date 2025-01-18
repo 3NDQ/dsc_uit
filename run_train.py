@@ -35,7 +35,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         train_progress = tqdm(train_dataloader, desc=f"Training Epoch {epoch+1}/{num_epochs}", leave=False)
         
         for batch in train_progress:
-            batch = {k: v.to(device) for k, v in batch.items()}
+            batch = {k: v for k, v in batch.items()}
             
             optimizer.zero_grad()
             device_type = "cuda" if torch.cuda.is_available() else "cpu"
