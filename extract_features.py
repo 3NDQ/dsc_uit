@@ -7,6 +7,7 @@ import cv2
 import pandas as pd
 import torch
 from tqdm import tqdm
+import argparse
 
 def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_dir, mode="train"):
     # Initialize models and processors
@@ -54,8 +55,6 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
     print(f"Features saved to {output_dir}")
 
 def preprocess_data(images, texts, vit_processor, vit_model, text_tokenizer, text_encoder, image_folder, ocr_cache_path, mode='train'):
-    train_path = "/kaggle/input/vimmsd/train-images"
-    test_path = "/kaggle/input/vimmsd/train-images"
     image_features = []
     ocr_features = []
     total_images = len(images)
@@ -78,7 +77,7 @@ def preprocess_data(images, texts, vit_processor, vit_model, text_tokenizer, tex
 
     for i, image_name in enumerate(images, 1):
         try:
-            image_path = os.path.join(train_path if mode == 'train' else test_path, image_name)
+            image_path = os.path.join(image_folder, image_name)
             img = cv2.imread(image_path)
 
             # Process the image using ViT model
@@ -143,20 +142,19 @@ def preprocess_data(images, texts, vit_processor, vit_model, text_tokenizer, tex
     return np.array(image_features), np.array(text_features)
 
 if __name__ == "__main__":
-    # Example usage for training data:
-    extract_and_save_features(
-        data_path="/kaggle/input/vimmsd-training-dataset/vimmsd-train.json",
-        image_folder="/kaggle/input/vimmsd-training-dataset/training-images/train-images",
-        ocr_cache_path="/kaggle/input/ocr-cache/paddle_train_ocr_cache.json",
-        output_dir="train_features",
-        mode="train"
-    )
+    parser = argparse.ArgumentParser(description="Extract features from image and text data.")
+    parser.add_argument("--data_path", required=True, help="Path to the JSON data file.")
+    parser.add_argument("--image_folder", required=True, help="Path to the folder containing images.")
+    parser.add_argument("--ocr_cache_path", required=True, help="Path to the OCR cache file.")
+    parser.add_argument("--output_dir", required=True, help="Path to the directory where features will be saved.")
+    parser.add_argument("--mode", default="train", choices=["train", "test"], help="Mode: 'train' or 'test'.")
 
-    # Example usage for test data:
+    args = parser.parse_args()
+
     extract_and_save_features(
-        data_path="/kaggle/input/vimmsd-public-test/vimmsd-public-test.json",
-        image_folder="/kaggle/input/vimmsd-public-test/public-test-images/dev-images",
-        ocr_cache_path="test_ocr_cache.json",
-        output_dir="test_features",
-        mode="test"
+        data_path=args.data_path,
+        image_folder=args.image_folder,
+        ocr_cache_path=args.ocr_cache_path,
+        output_dir=args.output_dir,
+        mode=args.mode
     )
