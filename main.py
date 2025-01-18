@@ -27,7 +27,7 @@ def main():
     parser.add_argument('--text_encoder', type=str, default="vinai/phobert-base-v2", help='Name/path of the text encoder model')
     parser.add_argument('--image_encoder', type=str, default="google/vit-base-patch16-224", help='Name/path of the image encoder model')
     parser.add_argument('--image_processor', type=str, default="google/vit-base-patch16-224-in21k", help='Name/path of the image processor')
-    parser.add_argument('--tokenizer', type=str, default="vinai/phobert-base-v2", help='Name/path of the tokenizer')
+    parser.add_argument('--text_tokenizer', type=str, default="vinai/phobert-base-v2", help='Name/path of the tokenizer')
     
     # Training arguments
     parser.add_argument('--train_json', type=str, default='/kaggle/input/vimmsd-training-dataset/vimmsd-train.json', help='Path to the training JSON file')
@@ -111,7 +111,7 @@ def main():
             active_ocr=args.active_ocr,
             use_train_ocr_cache=args.use_train_ocr_cache,
             train_ocr_cache_path=args.train_ocr_cache_path,
-            tokenizer=tokenizer,
+            text_tokenizer=text_tokenizer,
             text_encoder=text_encoder,
             image_encoder=image_encoder,
             image_processor=image_processor,
