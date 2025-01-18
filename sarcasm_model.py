@@ -105,7 +105,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         ocr_features = []
         total_images = len(images)
 
-        input_json_file_path = self.test_ocr_cache_path if mode == 'test' else self.test_ocr_cache_path
+        input_json_file_path = self.test_ocr_cache_path if mode == 'test' else self.train_ocr_cache_path
 
         if os.path.exists(input_json_file_path):
             with open(input_json_file_path, 'r', encoding='utf-8') as f:
