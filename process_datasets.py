@@ -18,7 +18,6 @@ class BaseSarcasmDataset(Dataset):
         self.ocr_cache_path = ocr_cache_path
         self.active_ocr = active_ocr
         self.ocr_cache = self._load_ocr_cache()
-        self.ocr_reader = easyocr.Reader(['vi', 'en'], gpu=True)
         self.data = self._load_data(data_path)
 
         # Image transformation
@@ -40,15 +39,6 @@ class BaseSarcasmDataset(Dataset):
                 logging.error(f"Failed to load OCR cache from {self.ocr_cache_path}: {e}")
         return {}
 
-    def _perform_ocr(self, image_path):
-        try:
-            logging.debug(f"Performing OCR for {image_path}")
-            ocr_results = self.ocr_reader.readtext(image_path)
-            return ' '.join([res[1] for res in ocr_results]).lower()
-        except Exception as e:
-            logging.error(f"OCR failed for {image_path}: {e}")
-            return ""
-
     def _load_image(self, image_path):
         try:
             image = Image.open(image_path).convert('RGB')
@@ -56,11 +46,6 @@ class BaseSarcasmDataset(Dataset):
         except Exception as e:
             logging.error(f"Image loading failed for {image_path}: {e}")
             return torch.zeros(3, 224, 224)
-
-    def _get_combined_text(self, caption, ocr_text=""):
-        if self.active_ocr:
-            return f"[CAPTION] {caption.lower()} [OCR] {ocr_text}"
-        return caption.lower()
 
     def save_ocr_cache(self):
         if self.use_ocr_cache and self.ocr_cache_path:
@@ -99,28 +84,21 @@ class BaseSarcasmDataset(Dataset):
 
         # Process Image and Text
         image = self._load_image(image_path)
-        combined_text = self._get_combined_text(item['caption'], raw_ocr)
-        encoded_text = self.text_tokenizer(
-            combined_text, 
-            padding='max_length', 
-            truncation=True, 
-            max_length=self.max_length, 
-            return_tensors='pt'
-        )
+
 
         if 'label' in item and item['label'] is not None:
             return {
                 'image': image,
-                'input_ids': encoded_text['input_ids'].squeeze(),
-                'attention_mask': encoded_text['attention_mask'].squeeze(),
+                'caption': item['caption'],
+                'ocr': raw_ocr,
                 'labels': torch.tensor(item['label_id'], dtype=torch.long) if 'label_id' in item else None
             }
         else:
             # Nếu không có 'label', chỉ trả về image, input_ids, attention_mask
             return {
                 'image': image,
-                'input_ids': encoded_text['input_ids'].squeeze(),
-                'attention_mask': encoded_text['attention_mask'].squeeze()
+                'caption': item['caption'],
+                'ocr': raw_ocr,
             }
 
 class TrainSarcasmDataset(BaseSarcasmDataset):
@@ -147,18 +125,9 @@ class TestSarcasmDataset(BaseSarcasmDataset):
         # Perform OCR (nếu cần)
         raw_ocr = ""
         image = self._load_image(image_path)
-        combined_text = self._get_combined_text(item['caption'], raw_ocr)
-        encoded_text = self.text_tokenizer(
-            combined_text, 
-            padding='max_length', 
-            truncation=True, 
-            max_length=self.max_length, 
-            return_tensors='pt'
-        )
 
-        # Trả về 'image', 'input_ids', và 'attention_mask' mà không có 'labels'
         return {
             'image': image,
-            'input_ids': encoded_text['input_ids'].squeeze(),
-            'attention_mask': encoded_text['attention_mask'].squeeze()
+            'caption': item['caption'],
+            'ocr': raw_ocr,
         }
