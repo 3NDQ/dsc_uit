@@ -24,7 +24,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     )
     
     early_stopping = EarlyStopping(patience=patience)
-    scaler = torch.amp.GradScaler()  # For mixed precision training
+    scaler = torch.cuda.amp.GradScaler()  # For mixed precision training
     
     best_models = []  # List to store the top 5 models based on F1 score
     
@@ -35,11 +35,16 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         train_progress = tqdm(train_dataloader, desc=f"Training Epoch {epoch+1}/{num_epochs}", leave=False)
         
         for batch in train_progress:
-            batch = {k: v for k, v in batch.items()}
+            batch = {k: v.to(device) for k, v in batch.items()}
+            device_type = "cuda" if torch.cuda.is_available() else "cpu"
             
             optimizer.zero_grad()
-            device_type = "cuda" if torch.cuda.is_available() else "cpu"
+
             with torch.amp.autocast(device_type=device_type):
+                # Convert image to float16 if using autocast, otherwise keep it as float32.
+                if device_type == 'cuda': # check if using GPU and therefore autocast
+                  batch['image'] = batch['image'].half()
+                
                 outputs = model(**batch)
                 loss = outputs['loss']
             
@@ -89,7 +94,6 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     logging.info(f"Best model from epoch {best_epoch+1} with F1 score {best_f1:.4f} loaded.")
     
     return model
-
 
 def run_train(train_json, train_image_folder, tokenizer, device, 
                       num_epochs, patience, batch_size, num_workers, train_ocr_cache_path,
@@ -167,4 +171,3 @@ def run_train(train_json, train_image_folder, tokenizer, device,
         learning_rate=learning_rate
     )
     logging.info('Model training complete')
-      

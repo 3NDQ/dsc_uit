@@ -84,11 +84,11 @@ class VietnameseSarcasmClassifier(nn.Module):
         
         # Image encoding
         image_outputs = self.image_encoder(image)
-        image_features = image_outputs.last_hidden_state[:, 0, :]  # Use the [CLS] token representation
+        image_features = image_outputs.last_hidden_state[:, 0, :]  
         
         # Text encoding
         text_outputs = self.text_encoder(caption)
-        text_features = text_outputs.last_hidden_state[:, 0, :]  # Use the [CLS] token representation
+        text_features = text_outputs.last_hidden_state[:, 0, :] 
         
         # Combine features based on fusion method
         if self.fusion_method == 'cross_attention':
