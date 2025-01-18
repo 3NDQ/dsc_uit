@@ -54,8 +54,8 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
     print(f"Features saved to {output_dir}")
 
 def preprocess_data(images, texts, vit_processor, vit_model, text_tokenizer, text_encoder, image_folder, ocr_cache_path, mode='train'):
-    train_path = "/kaggle/input/vimmsd-training-dataset/training-images/train-images"
-    test_path = "/kaggle/input/vimmsd-public-test/public-test-images/dev-images"
+    train_path = "/kaggle/input/vimmsd/train-images"
+    test_path = "/kaggle/input/vimmsd/train-images"
     image_features = []
     ocr_features = []
     total_images = len(images)
