@@ -109,12 +109,9 @@ class VietnameseSarcasmClassifier(nn.Module):
         alpha = [alpha_multi, alpha_text, alpha_image, alpha_not]
         alpha_sum = sum(alpha)
         alpha = [a / alpha_sum for a in alpha]
-
+        print(alpha)
         if labels is not None:
-            print(final_logits.device, labels.device)
-            # device = final_logits.device  # Lấy thiết bị của final_logits
-            # labels = labels.to(device)
-            criterion = FocalLoss(gamma=2, reduction="mean")
+            criterion = FocalLoss(alpha = alpha, gamma=2, reduction="mean")
             loss = criterion(final_logits, labels)
 
         return {'loss': loss, 'logits': final_logits} if loss is not None else final_logits
