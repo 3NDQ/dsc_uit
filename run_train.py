@@ -47,7 +47,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
 
             optimizer.zero_grad()
             
-            image_names = batch['image_name']
+            image_names = batch['image']
             captions = batch['caption']
             labels = batch['label']
             
