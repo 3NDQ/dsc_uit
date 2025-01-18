@@ -10,7 +10,7 @@ import torch
 
 class BaseSarcasmDataset(Dataset):
     def __init__(self, data_path, image_folder, text_tokenizer, 
-                 use_ocr_cache=False, active_ocr=True, ocr_cache_path=None, max_length=256):
+                 use_ocr_cache=False, active_ocr=True, ocr_cache_path=None, max_length=1024):
         self.image_folder = image_folder
         self.text_tokenizer = text_tokenizer
         self.max_length = max_length
