@@ -104,7 +104,6 @@ class VietnameseSarcasmClassifier(nn.Module):
 
         for i, image_name in enumerate(images, 1):
             try:
-                print(f"Processing image {i}/{total_images}", end='\r')
                 image_path = os.path.join(train_path if mode == 'train' else test_path, image_name)
                 img = cv2.imread(image_path)
 
@@ -148,8 +147,6 @@ class VietnameseSarcasmClassifier(nn.Module):
         total_texts = len(texts)
         for i, text in enumerate(texts, 1):
             try:
-                print(f"Processing text {i}/{total_texts}", end='\r')
-
                 # Use Jina tokenizer and model for text processing
                 inputs = self.text_tokenizer(
                     text, 
