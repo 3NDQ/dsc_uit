@@ -7,7 +7,7 @@ from sarcasm_model import FocalLoss
 from sarcasm_model import VietnameseSarcasmClassifier
 from sklearn.model_selection import train_test_split
 from transformers import get_linear_schedule_with_warmup
-from utils import EarlyStopping
+from utils import EarlyStopping, FocalLoss
 from torch.cuda import amp
 from tqdm import tqdm
 import heapq
@@ -163,6 +163,6 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     # Train the model
     logging.info('Start training model...')
     model = train_model(
-        model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate, class_weights_tensor
+        model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate
     )
     logging.info('Model training complete')

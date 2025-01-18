@@ -1,36 +1,8 @@
 import torch
 import torch.nn as nn
 import logging
-from utils import CrossAttention, SelfAttention
+from utils import CrossAttention, SelfAttention, FocalLoss
 import numpy as np
-
-class FocalLoss(nn.Module):
-    def __init__(self, alpha=None, gamma=2, reduction='mean'):
-        super(FocalLoss, self).__init__()
-        self.gamma = gamma
-        self.reduction = reduction
-        self.alpha = alpha
-        if alpha is not None:
-            self.alpha = torch.tensor(alpha, dtype=torch.float)
-
-    def forward(self, logits, targets):
-        ce_loss = nn.CrossEntropyLoss(reduction='none')(logits, targets)
-        pt = torch.exp(-ce_loss)
-        if self.alpha is not None:
-            # Make alpha device-compatible
-            alpha = self.alpha.to(targets.device)
-            # Use alpha according to class
-            alpha_t = alpha.gather(0, targets.data.view(-1))
-            focal_loss = alpha_t * (1 - pt) ** self.gamma * ce_loss
-        else:
-            focal_loss = (1 - pt) ** self.gamma * ce_loss
-
-        if self.reduction == 'mean':
-            return focal_loss.mean()
-        elif self.reduction == 'sum':
-            return focal_loss.sum()
-        else:
-            return focal_loss
 
 class VietnameseSarcasmClassifier(nn.Module):
     def __init__(self,
@@ -64,7 +36,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         elif self.fusion_method == 'attention':
           combined_size = 768 + 768 + 768
         self.fc = nn.Linear(combined_size, num_labels)
-        self.loss_fct = FocalLoss(gamma=self.gamma)
+        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=[0.3, 0.15, 0.15, 0.4])
 
     def forward(self, image_features, text_features, labels=None):
         # Combine features based on fusion method

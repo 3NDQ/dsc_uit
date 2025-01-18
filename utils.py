@@ -4,6 +4,36 @@ import torch
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from tqdm import tqdm
 import logging
+
+class FocalLoss(nn.Module):
+    def __init__(self, alpha=None, gamma=2, reduction='mean'):
+        super(FocalLoss, self).__init__()
+        self.gamma = gamma
+        self.reduction = reduction
+        self.alpha = alpha
+        if alpha is not None:
+            self.alpha = torch.tensor(alpha, dtype=torch.float)
+
+    def forward(self, logits, targets):
+        ce_loss = nn.CrossEntropyLoss(reduction='none')(logits, targets)
+        pt = torch.exp(-ce_loss)
+        if self.alpha is not None:
+            # Make alpha device-compatible
+            alpha = self.alpha.to(targets.device)
+            # Use alpha according to class
+            alpha_t = alpha.gather(0, targets.data.view(-1))
+            focal_loss = alpha_t * (1 - pt) ** self.gamma * ce_loss
+        else:
+            focal_loss = (1 - pt) ** self.gamma * ce_loss
+
+        if self.reduction == 'mean':
+            return focal_loss.mean()
+        elif self.reduction == 'sum':
+            return focal_loss.sum()
+        else:
+            return focal_loss
+        
+
 class MultiHeadAttention(nn.Module):
     def __init__(self, d_model, num_heads, dropout_rate=0.1):
         super(MultiHeadAttention, self).__init__()
