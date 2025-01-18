@@ -27,7 +27,7 @@ class FocalLoss(nn.Module):
         self.gamma = gamma
         self.alpha = alpha
         if alpha is not None:
-            self.alpha = torch.FloatTensor(alpha)
+            self.alpha = torch.FloatTensor(alpha).cuda
         self.reduction = reduction
 
     def forward(self, input, target):
