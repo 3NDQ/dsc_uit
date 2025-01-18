@@ -24,7 +24,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     )
 
     early_stopping = EarlyStopping(patience=patience)
-    scaler = torch.amp.GradScaler() # Updated for deprecation warning
+    scaler = torch.amp.GradScaler(device_type="cuda")
     
     best_models = []  # List to store the top 5 models based on F1 score
 
@@ -35,7 +35,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         train_progress = tqdm(train_dataloader, desc=f"Training Epoch {epoch+1}/{num_epochs}", leave=False)
 
         for batch in train_progress:
-            # Move tensors to device, but keep OCR (list of strings) on CPU.
+            # Move tensors to device, keep image names and captions on CPU.
             batch_on_device = {}
             for k, v in batch.items():
                 if isinstance(v, torch.Tensor):
@@ -46,12 +46,8 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
             device_type = "cuda" if torch.cuda.is_available() else "cpu"
 
             optimizer.zero_grad()
-
+            
             with torch.amp.autocast(device_type=device_type):
-                # Convert image to float16 if using autocast, otherwise keep it as float32.
-                if device_type == 'cuda': # check if using GPU and therefore autocast
-                    batch_on_device['image'] = batch_on_device['image'].half()
-
                 outputs = model(**batch_on_device)
                 loss = outputs['loss']
 
@@ -104,7 +100,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
 
 def run_train(train_json, train_image_folder, tokenizer, device, 
                       num_epochs, patience, batch_size, num_workers, train_ocr_cache_path,
-                      text_encoder, image_encoder, learning_rate, 
+                      text_encoder, image_encoder, image_processor, learning_rate, 
                       val_size, random_state, fusion_method, use_train_ocr_cache=False, active_ocr=True):
     logging.info("Starting training and evaluation...")
     
@@ -160,7 +156,7 @@ def run_train(train_json, train_image_folder, tokenizer, device,
     
     # Initialize model with passed encoders
     try:
-        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method).to(device)
+        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method, image_processor).to(device)
         logging.info('Model initialized and moved to device')
     except Exception as e:
         logging.error(f"Failed to initialize the model: {e}")

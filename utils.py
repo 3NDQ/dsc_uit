@@ -78,20 +78,28 @@ def evaluate_model(model, dataloader, device):
     all_preds = []
     all_labels = []
     total_loss = 0
-    
+
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating", leave=False):
-            batch = {k: v.to(device) for k, v in batch.items()}
-            outputs = model(**batch)
+            # Move tensors to device, keep image names and captions on CPU.
+            batch_on_device = {}
+            for k, v in batch.items():
+                if isinstance(v, torch.Tensor):
+                    batch_on_device[k] = v.to(device)
+                else:
+                    batch_on_device[k] = v
             
-            if 'loss' in outputs and batch.get('labels') is not None:
+            outputs = model(**batch_on_device)
+
+            if 'loss' in outputs and batch_on_device.get('labels') is not None:
                 total_loss += outputs['loss'].item()
-            
-            logits = outputs['logits'] if isinstance(outputs, dict) else outputs
+
+            logits = outputs['logits']
             preds = torch.argmax(logits, dim=1)
-            
+
             all_preds.extend(preds.cpu().numpy())
-            all_labels.extend(batch['labels'].cpu().numpy())
+            if batch_on_device.get('labels') is not None:
+              all_labels.extend(batch_on_device['labels'].cpu().numpy())
     
     # Define class labels
     labels = ['multi-sarcasm', 'text-sarcasm', 'image-sarcasm', 'not-sarcasm']

@@ -5,7 +5,6 @@ import logging
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-import easyocr
 import torch
 
 class BaseSarcasmDataset(Dataset):
@@ -20,13 +19,6 @@ class BaseSarcasmDataset(Dataset):
         self.ocr_cache = self._load_ocr_cache()
         self.data = self._load_data(data_path)
 
-        # Image transformation
-        self.image_transform = transforms.Compose([
-            transforms.Resize((224, 224)),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
-
         logging.info(f"{self.__class__.__name__} initialized.")
 
     def _load_ocr_cache(self):
@@ -38,14 +30,6 @@ class BaseSarcasmDataset(Dataset):
             except Exception as e:
                 logging.error(f"Failed to load OCR cache from {self.ocr_cache_path}: {e}")
         return {}
-
-    def _load_image(self, image_path):
-        try:
-            image = Image.open(image_path).convert('RGB')
-            return self.image_transform(image)
-        except Exception as e:
-            logging.error(f"Image loading failed for {image_path}: {e}")
-            return torch.zeros(3, 224, 224)
 
     def _load_data(self, data_path):
         if isinstance(data_path, str) and os.path.isfile(data_path):
@@ -66,29 +50,18 @@ class BaseSarcasmDataset(Dataset):
 
     def __getitem__(self, idx):
         item = self.data[idx]
-        image_path = os.path.join(self.image_folder, item['image'])
-
-        # Perform OCR
-        raw_ocr = self.ocr_cache.get(image_path, self.use_ocr_cache)
-        if self.use_ocr_cache:
-            self.ocr_cache[image_path] = raw_ocr
-
-        # Process Image and Text
-        image = self._load_image(image_path)
-
+        image_name = item['image']
 
         if 'label' in item and item['label'] is not None:
             return {
-                'image': image,
+                'image': image_name,
                 'caption': item['caption'],
-                'ocr': raw_ocr,
                 'labels': torch.tensor(item['label_id'], dtype=torch.long) if 'label_id' in item else None
             }
         else:
             return {
-                'image': image,
+                'image': image_name,
                 'caption': item['caption'],
-                'ocr': raw_ocr,
             }
 
 class TrainSarcasmDataset(BaseSarcasmDataset):
@@ -110,14 +83,9 @@ class TrainSarcasmDataset(BaseSarcasmDataset):
 class TestSarcasmDataset(BaseSarcasmDataset):
     def __getitem__(self, idx):
         item = self.data[idx]
-        image_path = os.path.join(self.image_folder, item['image'])
-
-        # Perform OCR (nếu cần)
-        raw_ocr = ""
-        image = self._load_image(image_path)
+        image_name = item['image']
 
         return {
-            'image': image,
+            'image': image_name,
             'caption': item['caption'],
-            'ocr': raw_ocr,
         }

@@ -4,7 +4,7 @@ import torch
 import argparse
 import sys
 import logging
-from model_factory import get_text_encoder, get_image_encoder, get_tokenizer  
+from model_factory import get_text_encoder, get_image_encoder, get_tokenizer, get_image_processor  
 from run_train import run_train
 from run_test import run_test
 
@@ -26,6 +26,7 @@ def main():
     # Encoder and tokenizer arguments
     parser.add_argument('--text_encoder', type=str, default="vinai/phobert-base-v2", help='Name/path of the text encoder model')
     parser.add_argument('--image_encoder', type=str, default="google/vit-base-patch16-224", help='Name/path of the image encoder model')
+    parser.add_argument('--image_processor', type=str, default="google/vit-base-patch16-224-in21k", help='Name/path of the image processor')
     parser.add_argument('--tokenizer', type=str, default="vinai/phobert-base-v2", help='Name/path of the tokenizer')
     
     # Training arguments
@@ -84,6 +85,13 @@ def main():
     except Exception:
         logging.error("Tokenizer initialization failed.")
         return
+        
+    # Initialize image processor using factory functions
+    try:
+        image_processor = get_image_processor(args.image_processor)
+    except Exception:
+        logging.error("Image processor initialization failed.")
+        return
     
     # Initialize text and image encoders using factory functions
     try:
@@ -106,6 +114,7 @@ def main():
             tokenizer=tokenizer,
             text_encoder=text_encoder,
             image_encoder=image_encoder,
+            image_processor=image_processor,
             device=device,
             batch_size=args.batch_size,
             num_workers=args.num_workers,
@@ -127,6 +136,7 @@ def main():
             tokenizer=tokenizer,
             text_encoder=text_encoder,
             image_encoder=image_encoder,
+            image_processor=image_processor,
             device=device,
             batch_size=args.batch_size,
             num_workers=args.num_workers,

@@ -7,6 +7,7 @@ from process_datasets import TestSarcasmDataset
 from torch.utils.data import DataLoader
 from sarcasm_model import VietnameseSarcasmClassifier
 from tqdm import tqdm
+import numpy as np
 
 def test_model(model, device, dataloader):
     model.eval()
@@ -14,14 +15,20 @@ def test_model(model, device, dataloader):
     
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Testing", leave=False):
-            batch = {k: v.to(device) for k, v in batch.items()}
-            outputs = model(**batch)
-            logits = outputs['logits'] if isinstance(outputs, dict) else outputs
+            # Move tensors to device, keep image names and captions on CPU.
+            batch_on_device = {}
+            for k, v in batch.items():
+                if isinstance(v, torch.Tensor):
+                    batch_on_device[k] = v.to(device)
+                else:
+                    batch_on_device[k] = v
+
+            outputs = model(**batch_on_device)
+            logits = outputs['logits']
             preds = torch.argmax(logits, dim=1)
             predictions.extend(preds.cpu().numpy())
-    
-    return predictions
 
+    return predictions
 
 def run_test(test_json, test_image_folder, tokenizer, device, 
                             batch_size, num_workers, 
@@ -106,7 +113,7 @@ def run_test(test_json, test_image_folder, tokenizer, device,
         
         output = {
             "results": results,
-            "phase": "dev"
+            "phase": "test"
         }
         
         # Save predictions to JSON for each model
@@ -117,4 +124,3 @@ def run_test(test_json, test_image_folder, tokenizer, device,
             logging.info(f"Predictions saved to {output_filename} for model {idx+1}")
         except Exception as e:
             logging.error(f"Failed to save predictions for model {idx + 1}: {e}")
-        

@@ -1,5 +1,5 @@
 # model_factory.py
-from transformers import AutoModel, AutoTokenizer
+from transformers import AutoModel, AutoTokenizer, AutoProcessor
 import logging
 
 def get_tokenizer(tokenizer_name):
@@ -28,4 +28,12 @@ def get_image_encoder(model_name):
     except Exception as e:
         logging.error(f"Failed to load image encoder '{model_name}': {e}")
         raise e
-
+        
+def get_image_processor(processor_name):
+    try:
+        processor = AutoProcessor.from_pretrained(processor_name)
+        logging.info(f"Loaded image processor: {processor_name}")
+        return processor
+    except Exception as e:
+        logging.error(f"Failed to load image processor '{processor_name}': {e}")
+        raise e
