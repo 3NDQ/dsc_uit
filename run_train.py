@@ -59,8 +59,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
                     labels=labels,
                     mode='train'
                 )
-                loss, logits = outputs # Unpack the tuple
-                loss = outputs['loss']
+                loss, logits = outputs
 
             scaler.scale(loss).backward()
             scaler.step(optimizer)
