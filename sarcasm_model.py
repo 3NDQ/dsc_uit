@@ -193,11 +193,11 @@ class VietnameseSarcasmClassifier(nn.Module):
         print("\nPreprocessing completed!")
         return np.array(image_features), np.array(text_features)
 
-    def forward(self, image, caption, labels=None, is_test=False):
+    def forward(self, image, caption, labels=None, mode='train'):
         logging.debug("Forward pass started.")
 
         # Preprocess data
-        image_features, text_features = self.preprocess_data(image, caption, is_test=is_test)
+        image_features, text_features = self.preprocess_data(image, caption, mode=mode)
         image_features = torch.tensor(image_features, dtype=torch.float).to(self.device)
         text_features = torch.tensor(text_features, dtype=torch.float).to(self.device)
 
