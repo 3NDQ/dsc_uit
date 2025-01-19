@@ -42,10 +42,7 @@ class VietnameseSarcasmClassifier(nn.Module):
             nn.Linear(combined_size, combined_size // 2),
             nn.ReLU(),
             nn.Dropout(0.2),
-            nn.Linear(combined_size // 2, combined_size // 4),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(combined_size // 4, num_labels)
+            nn.Linear(combined_size // 2, num_labels),
         )
         logging.info(f"Using class_weight: {self.class_weight}")
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
