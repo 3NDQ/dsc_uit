@@ -12,7 +12,8 @@ class VietnameseSarcasmClassifier(nn.Module):
                  class_weight=None,
                  fusion_method='concat',
                  num_labels=4,
-                 gamma=2.0):
+                 gamma=2.0): 
+        
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
         self.mode = mode
@@ -20,19 +21,24 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.text_encoder = text_encoder
         self.fusion_method = fusion_method
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.gamma = gamma
+        self.gamma = gamma  # Store gamma
         self.class_weight = class_weight
-
+        # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
             self.text_to_image_attention = CrossAttention(d_in=1024, d_out_kq=2024, d_out_v=2024)
             self.image_to_text_attention = CrossAttention(d_in=2024, d_out_kq=1024, d_out_v=1024)
-            combined_size = 1024 + 2024 
         elif self.fusion_method == 'attention':
             self.self_attention = SelfAttention(d_in=2024 + 1024, d_out_kq=2024 + 1024, d_out_v=2024 + 1024)
-            combined_size = 2024 + 1024
-        else:
-            combined_size = 2024 + 1024
-
+        
+        # Define the output layer
+        combined_size = 0
+        if self.fusion_method == 'concat':
+            combined_size = 2024 + 1024  # Image (2024) + Text (1024)
+        elif self.fusion_method == 'cross_attention':
+            combined_size = 2024 + 1024  # Attended features from both modalities
+        elif self.fusion_method == 'attention':
+            combined_size = 2024 + 1024  # Self-attended features
+        
         self.fc = nn.Sequential(
             nn.Linear(combined_size, combined_size // 2),
             nn.ReLU(),
@@ -57,6 +63,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         logits = self.fc(combined_features)
 
         if labels is not None:
+            # Calculate loss using Focal Loss
             loss = self.loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             return loss, logits
         else:
