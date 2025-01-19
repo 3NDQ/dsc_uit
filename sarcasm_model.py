@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import logging
 from utils import CrossAttention, SelfAttention, FocalLoss, WeightedCrossEntropyLoss
 import numpy as np
@@ -30,28 +29,39 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.loss_type = loss_type
         self.label_smoothing = label_smoothing 
         
-        self.image_dense1 = nn.Linear(image_dim, 1000)
-        self.image_dropout1 = nn.Dropout(dropout_rate)
-        self.image_dense2 = nn.Linear(1000, 512)
-        self.image_dropout2 = nn.Dropout(dropout_rate)
-        self.image_dense3 = nn.Linear(512, 256)
-        
-        # Text branch
-        self.text_dense1 = nn.Linear(text_dim, 1024)
-        self.text_dropout1 = nn.Dropout(dropout_rate)
-        self.text_dense2 = nn.Linear(1024, 512)
-        
-        # Combined branch
-        self.combined_dense1 = nn.Linear(256 + 512, 1024)  # Concatenated image and text features
-        self.combined_dropout1 = nn.Dropout(dropout_rate)
-        self.combined_dense2 = nn.Linear(1024, 512)
-        self.combined_dropout2 = nn.Dropout(dropout_rate)
-        self.combined_dense3 = nn.Linear(512, 256)
-        self.combined_dropout3 = nn.Dropout(dropout_rate)
-        
-        # Output layer
-        self.output_layer = nn.Linear(256, num_labels)
-        
+        self.dropout = nn.Dropout(dropout_rate)
+        image_feature_size = 2024  
+        text_feature_size = 1024
+
+        self.image_dense1 = nn.Linear(image_feature_size, 1024)
+        self.image_dense2 = nn.Linear(1024, 512)
+
+        self.text_dense1 = nn.Linear(text_feature_size, 512)
+        self.text_dense3 = nn.Linear(512, 256)
+
+        self.text_dense2 = nn.Linear(text_feature_size, 512)
+        self.text_dense4 = nn.Linear(512, 256)
+
+        self.text_dense5 = nn.Linear(text_feature_size + 256 + 256, 512)
+
+        # Define attention layers based on fusion method
+        if self.fusion_method == 'cross_attention':
+            self.text_to_image_attention = CrossAttention(d_in_q=text_feature_size, d_in_kv=image_feature_size, d_out_kq=512, d_out_v=512)
+            self.image_to_text_attention = CrossAttention(d_in_q=image_feature_size, d_in_kv=text_feature_size, d_out_kq=512, d_out_v=512)
+            combined_size = 512 + 512 
+        elif self.fusion_method == 'attention':
+            self.self_attention = SelfAttention(d_in=image_feature_size + text_feature_size, d_out_kq=512, d_out_v=512)
+            combined_size = 512
+        else: # concat
+            combined_size = 512 + 512
+
+        self.fusion_dense1 = nn.Linear(combined_size, 512)
+        self.fusion_dense2 = nn.Linear(512, 256)
+            
+        self.fc = nn.Sequential(
+            nn.Linear(256, self.num_labels),
+        )
+
         logging.info(f"Using class_weight: {self.class_weight}")
         if self.loss_type == 'focal':
             self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight, label_smoothing=self.label_smoothing)
@@ -60,31 +70,59 @@ class VietnameseSarcasmClassifier(nn.Module):
         else:
             raise ValueError(f"Unsupported loss type: {self.loss_type}")
 
-    def forward(self, image_features, text_features):
-        # Image branch
-        image_out = F.relu(self.image_dense1(image_features))
-        image_out = self.image_dropout1(image_out)
-        image_out = F.relu(self.image_dense2(image_out))
-        image_out = self.image_dropout2(image_out)
-        image_out = F.relu(self.image_dense3(image_out))
+    def forward(self, image_features, text_features, labels=None):
         
-        # Text branch
-        text_out = F.relu(self.text_dense1(text_features))
-        text_out = self.text_dropout1(text_out)
-        text_out = F.relu(self.text_dense2(text_out))
+        image_out = self.image_dense1(image_features)
+        image_out = nn.GELU()(image_out)
+        image_out = self.dropout(image_out)
         
-        # Combine image and text features
-        combined = torch.cat((image_out, text_out), dim=1)
+        image_out = self.image_dense2(image_out)
+        image_out = nn.GELU()(image_out)
+        image_out = self.dropout(image_out)
         
-        # Combined branch
-        combined_out = F.relu(self.combined_dense1(combined))
-        combined_out = self.combined_dropout1(combined_out)
-        combined_out = F.relu(self.combined_dense2(combined_out))
-        combined_out = self.combined_dropout2(combined_out)
-        combined_out = F.relu(self.combined_dense3(combined_out))
-        combined_out = self.combined_dropout3(combined_out)
+        text_out1 = self.text_dense1(text_features)
+        text_out1 = nn.GELU()(text_out1)
+        text_out1 = self.dropout(text_out1)
         
-        # Output layer
-        logits = self.output_layer(combined_out)
+        text_out1 = self.text_dense3(text_out1)
+        text_out1 = nn.GELU()(text_out1)
+        text_out1 = self.dropout(text_out1)
         
-        return logits
+        text_out2 = self.text_dense2(text_features)
+        text_out2 = nn.GELU()(text_out2)
+        text_out2 = self.dropout(text_out2)
+        
+        text_out2 = self.text_dense4(text_out2)
+        text_out2 = nn.GELU()(text_out2)
+        text_out2 = self.dropout(text_out2)
+        
+        text_out_combined = torch.cat((text_out1, text_out2, text_features), dim=1)
+        text_out_combined = self.text_dense5(text_out_combined)
+        text_out_combined = nn.GELU()(text_out_combined)
+        text_out_combined = self.dropout(text_out_combined)
+        
+        if self.fusion_method == 'cross_attention':
+            attended_text = self.text_to_image_attention(text_out_combined, image_out)
+            attended_image = self.image_to_text_attention(image_out, text_out_combined)
+            combined_features = torch.cat((attended_text, attended_image), dim=1)
+        elif self.fusion_method == 'attention':
+            combined_features = torch.cat((image_out, text_out_combined), dim=1)
+            combined_features = self.self_attention(combined_features)
+        else:
+            combined_features = torch.cat((image_out, text_out_combined), dim=1)
+            
+        fusion_out = self.fusion_dense1(combined_features)
+        fusion_out = nn.GELU()(fusion_out)
+        fusion_out = self.dropout(fusion_out)
+        
+        fusion_out = self.fusion_dense2(fusion_out)
+        fusion_out = nn.GELU()(fusion_out)
+        fusion_out = self.dropout(fusion_out)
+        
+        logits = self.fc(fusion_out)
+
+        if labels is not None:
+            loss = self.loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+            return loss, logits
+        else:
+            return logits
