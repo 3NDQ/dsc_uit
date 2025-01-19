@@ -12,6 +12,8 @@ class VietnameseSarcasmClassifier(nn.Module):
                  class_weight=None,
                  fusion_method='concat',
                  num_labels=4,
+                 attention_heads=8,
+                 dropout_rate=0.2,
                  gamma=2.0): 
         
         super(VietnameseSarcasmClassifier, self).__init__()
@@ -23,28 +25,34 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.gamma = gamma  # Store gamma
         self.class_weight = class_weight
+        self.attention_heads = attention_heads
+        self.dropout_rate = dropout_rate
+        
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
-            self.text_to_image_attention = CrossAttention(d_in=1024, d_out_kq=2024, d_out_v=2024)
-            self.image_to_text_attention = CrossAttention(d_in=2024, d_out_kq=1024, d_out_v=1024)
+            self.text_to_image_attention = CrossAttention(d_in=1024, d_out_kq=2024, d_out_v=2024, num_heads=attention_heads)
+            self.image_to_text_attention = CrossAttention(d_in=2024, d_out_kq=1024, d_out_v=1024, num_heads=attention_heads)
+            combined_size = 1024 + 2024
         elif self.fusion_method == 'attention':
-            self.self_attention = SelfAttention(d_in=2024 + 1024, d_out_kq=2024 + 1024, d_out_v=2024 + 1024)
-        
-        # Define the output layer
-        combined_size = 0
-        if self.fusion_method == 'concat':
-            combined_size = 2024 + 1024  # Image (2024) + Text (1024)
-        elif self.fusion_method == 'cross_attention':
-            combined_size = 2024 + 1024  # Attended features from both modalities
-        elif self.fusion_method == 'attention':
-            combined_size = 2024 + 1024  # Self-attended features
-        
+            self.self_attention = SelfAttention(d_in=1024 + 2024, d_out_kq=1024 + 2024, d_out_v=1024 + 2024, num_heads=attention_heads)
+            combined_size = 1024 + 2024
+        elif self.fusion_method == 'element_wise_sum':
+            self.text_projection = nn.Linear(1024, 2024)
+            combined_size = 2024
+        elif self.fusion_method == 'gated':
+            self.text_gate = nn.Linear(1024, 1)
+            self.image_gate = nn.Linear(2024, 1)
+            combined_size = 1024 + 2024 
+        else:  
+            combined_size = 1024 + 2024
+            
         self.fc = nn.Sequential(
             nn.Linear(combined_size, combined_size // 2),
             nn.ReLU(),
-            nn.Dropout(0.2),
+            nn.Dropout(dropout_rate),
             nn.Linear(combined_size // 2, num_labels),
         )
+        
         logging.info(f"Using class_weight: {self.class_weight}")
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
 
@@ -57,13 +65,19 @@ class VietnameseSarcasmClassifier(nn.Module):
             combined_features = torch.cat((image_features, text_features), dim=1)
             attended_features = self.self_attention(combined_features)
             combined_features = attended_features
-        else:
+        elif self.fusion_method == 'element_wise_sum':
+            projected_text = self.text_projection(text_features)
+            combined_features = projected_text + image_features
+        elif self.fusion_method == 'gated':
+            text_gate_val = torch.sigmoid(self.text_gate(text_features))
+            image_gate_val = torch.sigmoid(self.image_gate(image_features))
+            combined_features = torch.cat((text_gate_val * text_features, image_gate_val * image_features), dim=1)
+        else: 
             combined_features = torch.cat((image_features, text_features), dim=1)
 
         logits = self.fc(combined_features)
 
         if labels is not None:
-            # Calculate loss using Focal Loss
             loss = self.loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             return loss, logits
         else:

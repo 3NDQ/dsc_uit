@@ -13,8 +13,8 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     image_processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224", use_fast=True)  
     image_encoder = AutoModelForImageClassification.from_pretrained("google/vit-base-patch16-224").to(device).to(torch.float32)
-    text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True)
-    text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True).to(device).to(torch.float32)
+    text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True, use_flash_attn=False)
+    text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True, use_flash_attn=False).to(device).to(torch.float32)
     print(f'{image_encoder.config.hidden_size + text_encoder.config.hidden_size}')
     print(f'{text_encoder.config.hidden_size}')
     # Load data from JSON
