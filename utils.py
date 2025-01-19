@@ -49,65 +49,6 @@ class FocalLoss(nn.Module):
         else:
             return focal_loss
         
-
-class MultiHeadAttention(nn.Module):
-    def __init__(self, d_model, num_heads, dropout_rate=0.1):
-        super(MultiHeadAttention, self).__init__()
-        self.d_model = d_model  # Dimensionality of the input
-        self.num_heads = num_heads  # Number of attention heads
-        self.d_k = d_model // num_heads  # Dimensionality of each head's key, query, and value
-        
-        # Linear layers for query, key, value, and output
-        self.W_q = nn.Linear(d_model, d_model)
-        self.W_k = nn.Linear(d_model, d_model)
-        self.W_v = nn.Linear(d_model, d_model)
-        self.W_o = nn.Linear(d_model, d_model)
-        
-        # Dropout for regularization
-        self.dropout = nn.Dropout(dropout_rate)
-        
-    def scaled_dot_product_attention(self, Q, K, V, mask=None):
-        d_k = Q.size(-1)
-        scores = torch.matmul(Q, K.transpose(-2, -1)) / torch.sqrt(torch.tensor(d_k, dtype=torch.float32))
-        
-        if mask is not None:
-            scores = scores.masked_fill(mask == 0, float('-inf'))
-        
-        attn_weights = F.softmax(scores, dim=-1)
-        attn_weights = self.dropout(attn_weights)
-        output = torch.matmul(attn_weights, V)
-        
-        return output, attn_weights
-    
-    def split_heads(self, x):
-        batch_size, seq_len, d_model = x.size()
-        return x.view(batch_size, seq_len, self.num_heads, self.d_k).transpose(1, 2)
-    
-    def combine_heads(self, x):
-        batch_size, _, seq_len, d_k = x.size()
-        return x.transpose(1, 2).contiguous().view(batch_size, seq_len, self.d_model)
-    
-    def forward(self, Q, K, V, mask=None):
-        # Linear transformations
-        Q = self.W_q(Q)
-        K = self.W_k(K)
-        V = self.W_v(V)
-        
-        # Split into multiple heads
-        Q = self.split_heads(Q)
-        K = self.split_heads(K)
-        V = self.split_heads(V)
-        
-        # Scaled dot-product attention
-        attn_output, attn_weights = self.scaled_dot_product_attention(Q, K, V, mask)
-        
-        # Combine heads
-        attn_output = self.combine_heads(attn_output)
-        
-        # Final linear transformation
-        output = self.W_o(attn_output)
-        
-        return output
 class SelfAttention(nn.Module):
     def __init__(self, d_in, d_out_kq, d_out_v):
         super().__init__()
@@ -127,17 +68,17 @@ class SelfAttention(nn.Module):
         return context_vec
 
 class CrossAttention(nn.Module):
-    def __init__(self, d_in, d_out_kq, d_out_v):
+    def __init__(self, d_in_q, d_in_kv, d_out_kq, d_out_v):
         super().__init__()
         self.d_out_kq = d_out_kq
         self.d_out_v = d_out_v
 
-        self.W_query = nn.Linear(d_in, d_out_kq)
-        self.W_key = nn.Linear(d_in, d_out_kq)
-        self.W_value = nn.Linear(d_in, d_out_v)
+        self.W_query = nn.Linear(d_in_q, d_out_kq)
+        self.W_key = nn.Linear(d_in_kv, d_out_kq)
+        self.W_value = nn.Linear(d_in_kv, d_out_v)
 
     def forward(self, x_1, x_2):
-        queries_1 = self.W_query(x_1) 
+        queries_1 = self.W_query(x_1)
         keys_2 = self.W_key(x_2)
         values_2 = self.W_value(x_2)
         attn_scores = queries_1.matmul(keys_2.T)
