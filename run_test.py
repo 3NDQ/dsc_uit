@@ -8,6 +8,7 @@ from process_datasets import TestSarcasmDataset
 from torch.utils.data import DataLoader
 from sarcasm_model import VietnameseSarcasmClassifier
 from tqdm import tqdm
+import zipfile
 
 def test_model(model, device, dataloader):
     model.eval()
@@ -100,34 +101,23 @@ def run_test(test_json, test_image_folder, tokenizer,
             "phase": "test"
         }
         
-        for idx, model_path in enumerate(model_paths):
-            try:
-                model_name = os.path.basename(model_path)
-                epoch = model_name.split('_')[-1].split('.')[0]
-                directory_name = f'model_epoch_{epoch}'
-                
-                # Tạo thư mục nếu chưa tồn tại
-                os.makedirs(directory_name, exist_ok=True)
-                
-                json_filename = os.path.join(directory_name, 'results.json')
-            except:
-                directory_name = f'model_{idx + 1}'
-                os.makedirs(directory_name, exist_ok=True)
-                json_filename = os.path.join(directory_name, 'results.json')
-                
-            try:
-                # Lưu kết quả vào tệp results.json
-                with open(json_filename, 'w', encoding='utf-8') as f:
-                    json.dump(output, f, ensure_ascii=False, indent=2)
-                logging.info(f"Predictions saved to {json_filename} for model {idx+1}")
-                
-                # Tạo tệp nén results.zip trong cùng thư mục
-                zip_filename = os.path.join(directory_name, 'results')
-                shutil.make_archive(zip_filename, 'zip', directory_name, 'results.json')
-                
-                # Xóa tệp results.json sau khi nén
-                os.remove(json_filename)
-                
-                logging.info(f"Results zipped into {zip_filename}.zip for model {idx+1}")
-            except Exception as e:
-                logging.error(f"Failed to save or zip predictions for model {idx + 1}: {e}")
+        model_dir = f'model_epoch_{idx + 1}'
+        os.makedirs(model_dir, exist_ok=True)
+
+        output_json_path = os.path.join(model_dir, 'results.json')
+        zip_path = os.path.join(model_dir, 'results.zip')
+
+        try:
+            with open(output_json_path, 'w', encoding='utf-8') as f:
+                json.dump(output, f, ensure_ascii=False, indent=2)
+            logging.info(f"Results saved to {output_json_path}")
+        except Exception as e:
+            logging.error(f"Failed to save results for model {idx + 1}: {e}")
+            continue
+        
+        try:
+            with zipfile.ZipFile(zip_path, 'w') as zipf:
+                zipf.write(output_json_path, arcname='results.json')
+            logging.info(f"Results zipped to {zip_path}")
+        except Exception as e:
+            logging.error(f"Failed to zip results for model {idx + 1}: {e}")
