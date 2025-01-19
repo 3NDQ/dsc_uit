@@ -85,7 +85,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         else:
             combined_features = torch.cat((image_out, text_out_combined), dim=1)
             
-        fusion_out = self.fusion_dense1(text_out_combined)
+        fusion_out = self.fusion_dense1(combined_features)
         fusion_out = nn.GELU()
         fusion_out = self.dropout(fusion_out)
         
