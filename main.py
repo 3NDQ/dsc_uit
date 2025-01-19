@@ -186,6 +186,9 @@ def main():
             num_workers=args.num_workers,
             model_paths=args.model_paths,
             fusion_method = args.fusion_method
+            loss_func=args.loss,
+            alpha_focal=args.alpha_focal,
+            gamma_focal=args.gamma_focal
         )
 
 if __name__ == "__main__":
