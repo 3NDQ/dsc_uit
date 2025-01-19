@@ -15,7 +15,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                  dropout_rate=0.2,
                  gamma=5.0,
                  loss_type='focal',
-                 label_smoothing=0.0):  # Add label_smoothing parameter
+                 label_smoothing=0.0): 
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
         self.mode = mode
@@ -44,7 +44,6 @@ class VietnameseSarcasmClassifier(nn.Module):
 
         self.text_dense5 = nn.Linear(text_feature_size + 256 + 256, 512)
 
-        # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
             self.text_to_image_attention = CrossAttention(d_in_q=text_feature_size, d_in_kv=image_feature_size, d_out_kq=512, d_out_v=512)
             self.image_to_text_attention = CrossAttention(d_in_q=image_feature_size, d_in_kv=text_feature_size, d_out_kq=512, d_out_v=512)
