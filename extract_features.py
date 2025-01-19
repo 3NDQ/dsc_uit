@@ -12,8 +12,8 @@ import argparse
 def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_dir, mode="train"):
     # Initialize models and processors
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    image_processor = AutoProcessor.from_pretrained("google/vit-base-patch16-224-in21k")  
-    image_encoder = AutoModel.from_pretrained("google/vit-base-patch16-224-in21k").to(device).to(torch.float32)
+    image_processor = AutoProcessor.from_pretrained("google/vit-base-patch16-224")  
+    image_encoder = AutoModel.from_pretrained("google/vit-base-patch16-224").to(device).to(torch.float32)
     text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True, use_flash_attn=False)
     text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True, use_flash_attn=False).to(device).to(torch.float32)
     
