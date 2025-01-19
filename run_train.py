@@ -113,7 +113,7 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
         classes=np.unique(train_labels),
         y=train_labels
     )
-    class_weights_normalized = class_weights  / class_weights_tensor.sum()
+    class_weights_normalized = class_weights  / class_weights.sum()
     class_weights_tensor = torch.tensor(class_weights_normalized, dtype=torch.float).to(device)
     # Log class weights
     logging.info("Class Weights:")
