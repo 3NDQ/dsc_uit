@@ -19,13 +19,14 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
     # Load data from JSON
     with open(data_path, "r", encoding="utf-8") as f:
         data = json.load(f)
-
+    all_ocr_features = []
     all_image_features = []
     all_text_features = []
+    all_image_only_features = []
     all_labels = []
 
     for item_id, item in tqdm(data.items(), desc=f"Extracting features for {mode} data"):
-        image_features, text_features = preprocess_data(
+        image_only_features, image_ocr_features, image_features, text_features = preprocess_data(
             [item["image"]], 
             [item["caption"]],
             image_processor,
@@ -39,6 +40,9 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
         
         all_image_features.append(image_features)
         all_text_features.append(text_features)
+        all_ocr_features.append(image_ocr_features)
+        all_image_only_features.append(image_only_features)
+        
         if mode == "train":
             label_to_id = {
                 'multi-sarcasm': 0, 
@@ -58,8 +62,10 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
 
     # Save features and labels (or identifiers for test mode)
     os.makedirs(output_dir, exist_ok=True)
-    np.save(os.path.join(output_dir, "image_features.npy"), np.array(all_image_features))
+    np.save(os.path.join(output_dir, "combined_image_features.npy"), np.array(all_image_features))
     np.save(os.path.join(output_dir, "text_features.npy"), np.array(all_text_features))
+    np.save(os.path.join(output_dir, "ocr_features.npy"), np.array(all_ocr_features))
+    np.save(os.path.join(output_dir, "image_features.npy"), np.array(all_image_only_features))
     
     with open(os.path.join(output_dir, "labels.json"), "w", encoding="utf-8") as f:
         json.dump(all_labels, f, indent=2)
@@ -68,7 +74,8 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
 
 def preprocess_data(images, texts, image_processor, image_encoder, text_tokenizer, text_encoder, image_folder, ocr_cache_path, mode='train'):
     image_combined_features = []
-    ocr_features = []
+    image_only_features = []
+    image_ocr_features = []
     total_images = len(images)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -96,7 +103,7 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
             with torch.no_grad():
                 image_outputs = image_encoder(**inputs)
             image_features = image_outputs.logits.cpu().numpy().squeeze()
-
+            image_only_features.append(image_features)
             if image_name in existing_images:
                 combined_text = df[df["image_path"] == image_name]["ocr_text"].values[0]
             else:
@@ -116,9 +123,11 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
 
                 ocr_features = ocr_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
                 combined_features = np.concatenate([image_features, ocr_features])
+                image_ocr_features.append(ocr_features)
             else:
                 combined_features = np.concatenate([image_features, np.zeros(text_encoder.config.hidden_size)])
-
+                image_ocr_features.append(np.zeros(text_encoder.config.hidden_size))
+                
             image_combined_features.append(combined_features)
         except Exception as e:
             print(f"\nError processing image {image_name}: {str(e)}")
@@ -146,7 +155,7 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
             print(f"\nError processing text: {str(e)}")
             text_features.append(np.zeros(text_encoder.config.hidden_size))
 
-    return np.array(image_combined_features), np.array(text_features)
+    return np.array(image_only_features), np.array(image_ocr_features), np.array(image_combined_features), np.array(text_features)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract features from image and text data.")
