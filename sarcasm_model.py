@@ -74,8 +74,8 @@ class VietnameseSarcasmClassifier(nn.Module):
 
         # --- Loss Function ---
         logging.info(f"Using class_weight: {self.class_weight}")
-        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
-
+        # self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
+        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=[0.13, 0.45, 0.25, 0.12])
     def forward(self, image_features, text_features, labels=None):
         # --- "Old" Code Forward Pass ---
         projected_text_features = self.text_projection(text_features)
