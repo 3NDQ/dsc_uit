@@ -23,9 +23,9 @@ class VietnameseSarcasmClassifier(nn.Module):
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
             self.text_to_image_attention = CrossAttention(d_in=768, d_out_kq=768, d_out_v=768)
-            self.image_to_text_attention = CrossAttention(d_in=768+768, d_out_kq=768+768, d_out_v=768+768)
+            self.image_to_text_attention = CrossAttention(d_in=768 + 768, d_out_kq=768 + 768, d_out_v=768 + 768)
         elif self.fusion_method == 'attention':
-            self.self_attention = SelfAttention(d_in=768+768+768, d_out_kq=768+768+768, d_out_v=768+768+768)
+            self.self_attention = SelfAttention(d_in=768+768+ 768, d_out_kq=768+768+768, d_out_v=768 + 768 + 768)
             
         # Define the output layer
         combined_size = 0
@@ -51,7 +51,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         else:
             combined_features = torch.cat((image_features, text_features), dim=1)
 
-        # Pass through the fully connected layer
+        
         logits = self.fc(combined_features)
 
         if labels is not None:

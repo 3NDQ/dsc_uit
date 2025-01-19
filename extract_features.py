@@ -12,10 +12,10 @@ import argparse
 def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_dir, mode="train"):
     # Initialize models and processors
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    vit_processor = AutoProcessor.from_pretrained("google/vit-base-patch16-224-in21k")  
-    vit_model = AutoModel.from_pretrained("google/vit-base-patch16-224-in21k").to(device)
-    text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True)
-    text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True).to(device)
+    image_processor = AutoProcessor.from_pretrained("google/vit-base-patch16-224-in21k")  
+    image_encoder = AutoModel.from_pretrained("google/vit-base-patch16-224-in21k").to(device).to(torch.float32)
+    text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True, use_flash_attn=False)
+    text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True, use_flash_attn=False).to(device).to(torch.float32)
     
     # Load data from JSON
     with open(data_path, "r", encoding="utf-8") as f:
@@ -29,8 +29,8 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
         image_features, text_features = preprocess_data(
             [item["image"]], 
             [item["caption"]],
-            vit_processor,
-            vit_model,
+            image_processor,
+            image_encoder,
             text_tokenizer,
             text_encoder,
             image_folder,
@@ -49,7 +49,7 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
             }
             all_labels.append({
                 "item_id": item_id,
-                "label_id": label_to_id.get(item["label"], 3) # Correctly access "label" and map to ID
+                "label_id": label_to_id.get(item["label"], 3)
             })
 
         elif mode == "test":
@@ -67,7 +67,7 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
 
     print(f"Features saved to {output_dir}")
 
-def preprocess_data(images, texts, vit_processor, vit_model, text_tokenizer, text_encoder, image_folder, ocr_cache_path, mode='train'):
+def preprocess_data(images, texts, image_processor, image_encoder, text_tokenizer, text_encoder, image_folder, ocr_cache_path, mode='train'):
     image_features = []
     ocr_features = []
     total_images = len(images)
@@ -93,11 +93,10 @@ def preprocess_data(images, texts, vit_processor, vit_model, text_tokenizer, tex
             image_path = os.path.join(image_folder, image_name)
             img = cv2.imread(image_path)
 
-            # Process the image using ViT model
-            inputs = vit_processor(images=img, return_tensors="pt").to(device)
+            inputs = image_processor(images=img, return_tensors="pt").to(device)
             with torch.no_grad():
-                vit_outputs = vit_model(**inputs)
-            vit_features = vit_outputs.last_hidden_state[:, 0, :].cpu().numpy().squeeze()
+                image_outputs = image_encoder(**inputs)
+            image_features = image_outputs.logits.cpu().numpy().squeeze()
 
             if image_name in existing_images:
                 combined_text = df[df["image_path"] == image_name]["ocr_text"].values[0]
@@ -105,7 +104,6 @@ def preprocess_data(images, texts, vit_processor, vit_model, text_tokenizer, tex
                 combined_text = ""
 
             if combined_text.strip():
-                # Use Jina tokenizer and model for text processing
                 text_inputs = text_tokenizer(
                     combined_text,
                     return_tensors="pt", 
@@ -115,25 +113,22 @@ def preprocess_data(images, texts, vit_processor, vit_model, text_tokenizer, tex
                 ).to(device)
 
                 with torch.no_grad():
-                    jina_outputs = text_encoder(**text_inputs)
+                    ocr_outputs = text_encoder(**text_inputs)
 
-                # Extract Jina features
-                jina_features = jina_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
-                combined_features = np.concatenate([vit_features, jina_features])
+                ocr_features = ocr_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
+                combined_features = np.concatenate([image_features, ocr_features])
             else:
-                combined_features = np.concatenate([vit_features, np.zeros(text_encoder.config.hidden_size)])
+                combined_features = np.concatenate([image_features, np.zeros(text_encoder.config.hidden_size)])
 
             image_features.append(combined_features)
-
         except Exception as e:
             print(f"\nError processing image {image_name}: {str(e)}")
-            image_features.append(np.zeros(vit_model.config.hidden_size + text_encoder.config.hidden_size))
+            image_features.append(np.zeros(image_encoder.config.hidden_size + text_encoder.config.hidden_size))
 
     text_features = []
     total_texts = len(texts)
     for i, text in enumerate(texts, 1):
         try:
-            # Use Jina tokenizer and model for text processing
             inputs = text_tokenizer(
                 text, 
                 return_tensors="pt", 
@@ -143,10 +138,10 @@ def preprocess_data(images, texts, vit_processor, vit_model, text_tokenizer, tex
             ).to(device)
 
             with torch.no_grad():
-                jina_outputs = text_encoder(**inputs)
+                text_outputs = text_encoder(**inputs)
 
-            jina_feature = jina_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
-            text_features.append(jina_feature)
+            text_feature = text_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
+            text_features.append(text_feature)
 
         except Exception as e:
             print(f"\nError processing text: {str(e)}")
