@@ -27,7 +27,7 @@ def test_model(model, device, dataloader):
 def run_test(test_json, test_image_folder, tokenizer, 
              device, batch_size, num_workers, 
              test_ocr_cache_path, model_paths, 
-             text_encoder, image_encoder, fusion_method):
+             text_encoder, image_encoder, fusion_method, alpha_focal, gamma_focal, loss_func):
     logging.info("Starting TESTING...")
 
     # Create test dataset with OCR caching parameters
@@ -49,7 +49,7 @@ def run_test(test_json, test_image_folder, tokenizer,
 
     # Initialize model with passed encoders
     try:
-        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method).to(device)
+        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method, alpha_focal, gamma_focal, loss_func).to(device)
         logging.info('Model initialized and moved to device')
     except Exception as e:
         logging.error(f"Failed to initialize the model: {e}")
