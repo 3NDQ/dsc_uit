@@ -136,7 +136,7 @@ class CrossAttention(nn.Module):
         self.num_heads = num_heads
 
         self.W_query = nn.Linear(d_in, d_out_kq)
-        self.W_key = nn.Linear(d_in, d_out_kq)
+        self.W_key = nn.Linear(d_in, d_out_kq)  
         self.W_value = nn.Linear(d_in, d_out_v)
 
     def forward(self, x_1, x_2):
@@ -147,7 +147,7 @@ class CrossAttention(nn.Module):
         attn_weights = torch.softmax(attn_scores / (self.d_out_kq ** 0.5), dim=-1)
         context_vec = attn_weights.matmul(values_2)
         return context_vec
-
+    
 class EarlyStopping:
     def __init__(self, patience=5, min_delta=0):
         self.patience = patience
