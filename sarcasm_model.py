@@ -37,7 +37,15 @@ class VietnameseSarcasmClassifier(nn.Module):
         elif self.fusion_method == 'attention':
             combined_size = 2024 + 1024  # Self-attended features
         
-        self.fc = nn.Linear(combined_size, num_labels)
+        self.fc = nn.Sequential(
+            nn.Linear(combined_size, combined_size // 2),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(combined_size // 2, combined_size // 4),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(combined_size // 4, num_labels)
+        )
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=class_weight_tensor)
 
     def forward(self, image_features, text_features, labels=None):
