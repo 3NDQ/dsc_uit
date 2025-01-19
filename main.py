@@ -4,7 +4,6 @@ import torch
 import argparse
 import sys
 import logging
-from model_factory import get_text_encoder, get_image_encoder
 from run_train import run_train
 from run_test import run_test
 
@@ -22,11 +21,6 @@ def main():
 
     # Mode: train or test
     parser.add_argument('--mode', type=str, choices=['train', 'test'], required=True, help='Mode: train or test')
-
-    # Encoder arguments
-    parser.add_argument('--text_encoder', type=str, default="jinaai/jina-embeddings-v3", help='Name/path of the text encoder model')
-    parser.add_argument('--image_encoder', type=str, default="google/vit-base-patch16-224", help='Name/path of the image encoder model')
-
     # Paths to pre-extracted features
     parser.add_argument('--train_features_dir', type=str, default='train_features', help='Directory containing pre-extracted training features')
     parser.add_argument('--test_features_dir', type=str, default='test_features', help='Directory containing pre-extracted testing features')
@@ -53,22 +47,12 @@ def main():
 
     args = parser.parse_args()
 
-    # Initialize text and image encoders using factory functions
-    try:
-        text_encoder = get_text_encoder(args.text_encoder)
-        image_encoder = get_image_encoder(args.image_encoder)
-    except Exception:
-        logging.error("Encoder initialization failed.")
-        return
-
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     logging.info(f"Using device: {device}")
 
     if args.mode == 'train':
         run_train(
             train_features_dir=args.train_features_dir,
-            text_encoder=text_encoder,
-            image_encoder=image_encoder,
             device=device,
             batch_size=args.batch_size,
             num_workers=args.num_workers,
@@ -85,8 +69,6 @@ def main():
     elif args.mode == 'test':
         run_test(
             test_features_dir=args.test_features_dir,
-            text_encoder=text_encoder,
-            image_encoder=image_encoder,
             device=device,
             batch_size=args.batch_size,
             num_workers=args.num_workers,

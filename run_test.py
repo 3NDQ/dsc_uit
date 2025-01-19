@@ -25,7 +25,7 @@ def test_model(model, device, dataloader):
 
     return predictions
 
-def run_test(test_features_dir, text_encoder, image_encoder, device, batch_size, num_workers, model_paths, fusion_method):
+def run_test(test_features_dir, device, batch_size, num_workers, model_paths, fusion_method):
     logging.info("Starting testing with multiple models...")
 
     # Load pre-extracted features
@@ -53,8 +53,6 @@ def run_test(test_features_dir, text_encoder, image_encoder, device, batch_size,
     # Initialize model
     model = VietnameseSarcasmClassifier(
         mode="test",
-        text_encoder=text_encoder,
-        image_encoder=image_encoder,
         fusion_method=fusion_method,
     ).to(device)
 

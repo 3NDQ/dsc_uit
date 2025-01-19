@@ -7,8 +7,6 @@ import numpy as np
 class VietnameseSarcasmClassifier(nn.Module):
     def __init__(self,
                  mode,
-                 text_encoder,
-                 image_encoder,
                  class_weight=None,
                  fusion_method='concat',
                  num_labels=4,
@@ -19,8 +17,6 @@ class VietnameseSarcasmClassifier(nn.Module):
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
         self.mode = mode
-        self.image_encoder = image_encoder
-        self.text_encoder = text_encoder
         self.fusion_method = fusion_method
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.gamma = gamma
