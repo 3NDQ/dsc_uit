@@ -16,9 +16,8 @@ import numpy as np
 import json
 from sklearn.utils.class_weight import compute_class_weight
 
-def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate, class_weights_tensor):
+def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate):
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-    model.foca
     num_training_steps = len(train_dataloader) * num_epochs
     num_warmup_steps = num_training_steps // 10
     scheduler = get_linear_schedule_with_warmup(
@@ -29,7 +28,6 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     scaler = torch.amp.GradScaler()
 
     best_models = []
-
     for epoch in range(num_epochs):
         model.train()
         total_loss = 0
@@ -156,6 +154,7 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
         text_encoder=text_encoder,
         image_encoder=image_encoder,
         fusion_method=fusion_method,
+        class_weight_tensor=class_weights_tensor,  # Pass class weights here
         gamma=gamma  # Pass gamma to the model
     ).to(device)
     logging.info('Model initialized and moved to device')
