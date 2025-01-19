@@ -33,7 +33,7 @@ class VietnameseSarcasmClassifier(nn.Module):
             nn.Dropout(dropout_rate)
         )
         self.image_projection = nn.Sequential(
-            nn.Linear(2048, 512),
+            nn.Linear(2024, 512),
             nn.ReLU(),
             nn.Dropout(dropout_rate)
         )
