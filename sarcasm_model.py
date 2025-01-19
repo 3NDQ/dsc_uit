@@ -67,6 +67,14 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_out1 = nn.GELU()(text_out1)
         text_out1 = self.dropout(text_out1)
         
+        text_out1 = self.text_dense1(text_features)
+        text_out1 = nn.GELU()(text_out1)
+        text_out1 = self.dropout(text_out1)
+        
+        text_out2 = self.text_dense2(text_features)
+        text_out2 = nn.GELU()(text_out2)
+        text_out2 = self.dropout(text_out2)
+        
         text_out2 = self.text_dense2(text_features)
         text_out2 = nn.GELU()(text_out2)
         text_out2 = self.dropout(text_out2)
