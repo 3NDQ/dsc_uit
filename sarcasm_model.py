@@ -59,6 +59,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
 
     def forward(self, image_features, text_features, labels=None):
+        text_features *= 1.5
         
         image_out = self.image_dense1(image_features)
         image_out = nn.GELU()(image_out)

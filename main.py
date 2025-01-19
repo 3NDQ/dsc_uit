@@ -24,8 +24,8 @@ def main():
     parser.add_argument('--mode', type=str, choices=['train', 'test'], required=True, help='Mode: train or test')
 
     # Encoder arguments
-    parser.add_argument('--text_encoder', type=str, default="jinaai/jina-embeddings-v2-base-en", help='Name/path of the text encoder model')
-    parser.add_argument('--image_encoder', type=str, default="google/vit-base-patch16-224-in21k", help='Name/path of the image encoder model')
+    parser.add_argument('--text_encoder', type=str, default="jinaai/jina-embeddings-v3", help='Name/path of the text encoder model')
+    parser.add_argument('--image_encoder', type=str, default="google/vit-base-patch16-224", help='Name/path of the image encoder model')
 
     # Paths to pre-extracted features
     parser.add_argument('--train_features_dir', type=str, default='train_features', help='Directory containing pre-extracted training features')
