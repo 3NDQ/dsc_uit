@@ -62,27 +62,27 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_features *= 1.5
         
         image_out = self.image_dense1(image_features)
-        image_out = nn.GELU()(image_out)
+        image_out = nn.ReLU()(image_out)
         image_out = self.dropout(image_out)
         
         image_out = self.image_dense2(image_out)
-        image_out = nn.GELU()(image_out)
+        image_out = nn.ReLU()(image_out)
         image_out = self.dropout(image_out)
         
         text_out1 = self.text_dense1(text_features)
-        text_out1 = nn.GELU()(text_out1)
+        text_out1 = nn.ReLU()(text_out1)
         text_out1 = self.dropout(text_out1)
         
         text_out1 = self.text_dense1(text_features)
-        text_out1 = nn.GELU()(text_out1)
+        text_out1 = nn.ReLU()(text_out1)
         text_out1 = self.dropout(text_out1)
         
         text_out2 = self.text_dense2(text_features)
-        text_out2 = nn.GELU()(text_out2)
+        text_out2 = nn.ReLU()(text_out2)
         text_out2 = self.dropout(text_out2)
         
         text_out2 = self.text_dense2(text_features)
-        text_out2 = nn.GELU()(text_out2)
+        text_out2 = nn.ReLU()(text_out2)
         text_out2 = self.dropout(text_out2)
         
         text_out_combined = torch.cat((text_out1, text_out2, text_features), dim=1)
@@ -99,15 +99,15 @@ class VietnameseSarcasmClassifier(nn.Module):
             combined_features = torch.cat((image_out, text_out_combined), dim=1)
             
         fusion_out = self.fusion_dense(combined_features)
-        fusion_out = nn.GELU()(fusion_out)
+        fusion_out = nn.ReLU()(fusion_out)
         fusion_out = self.dropout(fusion_out)
         
         fusion_out = self.fusion_dense1(fusion_out)
-        fusion_out = nn.GELU()(fusion_out)
+        fusion_out = nn.ReLU()(fusion_out)
         fusion_out = self.dropout(fusion_out)
         
         fusion_out = self.fusion_dense2(fusion_out)
-        fusion_out = nn.GELU()(fusion_out)
+        fusion_out = nn.ReLU()(fusion_out)
         fusion_out = self.dropout(fusion_out)
         
         logits = self.fc(fusion_out)
