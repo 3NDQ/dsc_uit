@@ -14,7 +14,7 @@ import heapq
 import os  
 from utils import evaluate_model  
 
-def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate, loss_func):
+def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate):
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     
     num_training_steps = len(train_dataloader) * num_epochs
