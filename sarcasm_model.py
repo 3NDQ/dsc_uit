@@ -54,8 +54,6 @@ class VietnameseSarcasmClassifier(nn.Module):
             combined_features = torch.cat((image_features, text_features), dim=1)
             attended_features = self.self_attention(combined_features)
             combined_features = attended_features
-        elif self.fusion_method == 'mean_concat':
-            combined_features = torch.cat((image_features.mean(), text_features.mean()), dim=1)
         else:
             combined_features = torch.cat((image_features, text_features), dim=1)
 

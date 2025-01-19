@@ -44,7 +44,7 @@ def main():
     parser.add_argument('--learning_rate', type=float, default=3e-5, help='Learning rate for the optimizer')
     parser.add_argument('--val_size', type=float, default=0.2, help='Val size for train test split')
     parser.add_argument('--random_state', type=int, default=42, help='Random state')
-    parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'mean_concat', 'attention', 'cross_attention'], help='Method to fuse features: concat (default) or attention, cross_attention')
+    parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention', 'cross_attention'], help='Method to fuse features: concat (default) or attention, cross_attention')
 
     # Hyperparameters for Focal Loss
     parser.add_argument('--gamma', type=float, default=2.0, help='Gamma parameter for Focal Loss')
