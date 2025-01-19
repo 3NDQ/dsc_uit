@@ -76,7 +76,6 @@ def run_test(test_features_dir, text_encoder, image_encoder, device, batch_size,
         id_to_label = {0: 'multi-sarcasm', 1: 'text-sarcasm', 2: 'image-sarcasm', 3: 'not-sarcasm'}
         predicted_labels = [id_to_label.get(pred, 'not-sarcasm') for pred in predictions]
         
-        # Load test data keys (assuming you saved these during feature extraction)
         test_data_keys = list(range(len(predicted_labels)))
         
         results = {key: label for key, label in zip(test_data_keys, predicted_labels)}
