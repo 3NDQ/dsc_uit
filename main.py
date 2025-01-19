@@ -49,6 +49,7 @@ def main():
 
     # Hyperparameters for Focal Loss
     parser.add_argument('--gamma', type=float, default=2.0, help='Gamma parameter for Focal Loss')
+    parser.add_argument('--label_smoothing', type=float, default=0.15, help='Label smoothing value (e.g., 0.15)')
 
     args = parser.parse_args()
 

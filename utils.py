@@ -6,27 +6,49 @@ from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from tqdm import tqdm
 import logging
 class WeightedCrossEntropyLoss(nn.Module):
-    def __init__(self, weight=None, reduction='mean'):
+    def __init__(self, weight=None, reduction='mean', label_smoothing=0.0):
         super(WeightedCrossEntropyLoss, self).__init__()
         self.weight = weight
         self.reduction = reduction
+        self.label_smoothing = label_smoothing  # Add label smoothing
 
     def forward(self, logits, targets):
-        if self.weight is not None:
-            self.weight = self.weight.to(targets.device)
-        ce_loss = nn.CrossEntropyLoss(weight=self.weight, reduction=self.reduction)(logits, targets)
-        return ce_loss
+        if self.label_smoothing > 0:
+            n_classes = logits.size(-1)
+            one_hot = torch.zeros_like(logits).scatter(1, targets.unsqueeze(1), 1)
+            smooth_labels = (1 - self.label_smoothing) * one_hot + self.label_smoothing / n_classes
+            log_probs = F.log_softmax(logits, dim=-1)
+            loss = -(smooth_labels * log_probs).sum(dim=-1)
+        else:
+            loss = nn.CrossEntropyLoss(weight=self.weight, reduction='none')(logits, targets)
+
+        if self.reduction == 'mean':
+            return loss.mean()
+        elif self.reduction == 'sum':
+            return loss.sum()
+        else:
+            return loss
 class FocalLoss(nn.Module):
-    def __init__(self, alpha=None, gamma=2, reduction='mean'):
+    def __init__(self, alpha=None, gamma=2, reduction='mean', label_smoothing=0.0):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.reduction = reduction
         self.alpha = alpha
+        self.label_smoothing = label_smoothing  # Add label smoothing
         if alpha is not None:
             self.alpha = torch.tensor(alpha, dtype=torch.float)
 
     def forward(self, logits, targets):
-        ce_loss = nn.CrossEntropyLoss(reduction='none')(logits, targets)
+        # Apply label smoothing
+        if self.label_smoothing > 0:
+            n_classes = logits.size(-1)
+            one_hot = torch.zeros_like(logits).scatter(1, targets.unsqueeze(1), 1)
+            smooth_labels = (1 - self.label_smoothing) * one_hot + self.label_smoothing / n_classes
+            log_probs = F.log_softmax(logits, dim=-1)
+            ce_loss = -(smooth_labels * log_probs).sum(dim=-1)
+        else:
+            ce_loss = nn.CrossEntropyLoss(reduction='none')(logits, targets)
+
         pt = torch.exp(-ce_loss)
         if self.alpha is not None:
             alpha = self.alpha.to(targets.device)

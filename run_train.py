@@ -96,7 +96,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
 
 def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_workers,
               text_encoder, image_encoder, learning_rate, val_size, random_state, fusion_method, gamma,
-              loss_type):
+              loss_type, label_smoothing):
     logging.info("Starting training and evaluation...")
 
     # Load pre-extracted features
@@ -163,7 +163,8 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
         fusion_method=fusion_method,
         class_weight=class_weights_tensor,
         gamma=gamma,
-        loss_type=loss_type
+        loss_type='cross_entropy',
+        label_smoothing=label_smoothing
     ).to(device)
     logging.info('Model initialized and moved to device')
 

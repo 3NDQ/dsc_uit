@@ -14,8 +14,8 @@ class VietnameseSarcasmClassifier(nn.Module):
                  num_labels=4,
                  dropout_rate=0.2,
                  gamma=5.0,
-                 loss_type='focal'): 
-        
+                 loss_type='focal',
+                 label_smoothing=0.0):  # Add label_smoothing parameter
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
         self.mode = mode
@@ -23,10 +23,12 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.text_encoder = text_encoder
         self.fusion_method = fusion_method
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.loss_type = loss_type
-        self.gamma = gamma  # Store gamma
+        self.gamma = gamma
         self.class_weight = class_weight
         self.dropout_rate = dropout_rate
+        self.loss_type = loss_type
+        self.label_smoothing = label_smoothing 
+        
         self.dropout = nn.Dropout(dropout_rate)
         image_feature_size = 2024  
         text_feature_size = 1024
@@ -65,9 +67,9 @@ class VietnameseSarcasmClassifier(nn.Module):
 
         logging.info(f"Using class_weight: {self.class_weight}")
         if self.loss_type == 'focal':
-            self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
+            self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight, label_smoothing=self.label_smoothing)
         elif self.loss_type == 'cross_entropy':
-            self.loss_fct = WeightedCrossEntropyLoss(weight=self.class_weight)
+            self.loss_fct = WeightedCrossEntropyLoss(weight=self.class_weight, label_smoothing=self.label_smoothing)
         else:
             raise ValueError(f"Unsupported loss type: {self.loss_type}")
 
