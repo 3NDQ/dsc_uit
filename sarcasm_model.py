@@ -13,7 +13,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                  fusion_method='concat',
                  num_labels=4,
                  dropout_rate=0.2,
-                 gamma=2.0): 
+                 gamma=5.0): 
         
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
@@ -31,7 +31,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_feature_size = 1024
 
         self.image_dense1 = nn.Linear(image_feature_size, 1024)
-        self.image_dense2 = nn.Linear(1024, 512) # Changed to 512
+        self.image_dense2 = nn.Linear(1024, 512)
 
         self.text_dense1 = nn.Linear(text_feature_size, 512)
         self.text_dense3 = nn.Linear(512, 256)
