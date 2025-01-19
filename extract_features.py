@@ -16,7 +16,7 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
     text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True, use_flash_attn=False)
     text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True, use_flash_attn=False).to(device).to(torch.float32)
     print(f'{image_encoder.config.hidden_size + text_encoder.config.hidden_size}')
-    print(f'{text_encoder}')
+    print(f'{text_encoder.config.hidden_size}')
     # Load data from JSON
     with open(data_path, "r", encoding="utf-8") as f:
         data = json.load(f)
