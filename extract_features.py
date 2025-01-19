@@ -9,14 +9,19 @@ import torch
 from tqdm import tqdm
 import argparse
 
-def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_dir, mode="train"):
+def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_dir, mode="train", image_model_name="google/vit-base-patch16-224", text_model_name="jinaai/jina-embeddings-v3"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    image_processor = AutoImageProcessor.from_pretrained("google/vit-base-patch16-224", use_fast=True)  
-    image_encoder = AutoModelForImageClassification.from_pretrained("google/vit-base-patch16-224").to(device).to(torch.float32)
-    text_tokenizer = AutoTokenizer.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True, use_flash_attn=False)
-    text_encoder = AutoModel.from_pretrained("jinaai/jina-embeddings-v3", trust_remote_code=True, use_flash_attn=False).to(device).to(torch.float32)
-    print(f'{image_encoder.config.hidden_size + text_encoder.config.hidden_size}')
-    print(f'{text_encoder.config.hidden_size}')
+
+    # Use model names from arguments
+    image_processor = AutoImageProcessor.from_pretrained(image_model_name, use_fast=True)
+    image_encoder = AutoModelForImageClassification.from_pretrained(image_model_name).to(device).to(torch.float32)
+    text_tokenizer = AutoTokenizer.from_pretrained(text_model_name, trust_remote_code=True, use_flash_attn=False)
+    text_encoder = AutoModel.from_pretrained(text_model_name, trust_remote_code=True, use_flash_attn=False).to(device).to(torch.float32)
+    
+    print(f'Image Encoder Hidden Size: {image_encoder.config.hidden_size}')
+    print(f'Text Encoder Hidden Size: {text_encoder.config.hidden_size}')
+    print(f'Combined Feature Size: {image_encoder.config.hidden_size + text_encoder.config.hidden_size}')
+
     # Load data from JSON
     with open(data_path, "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -165,6 +170,8 @@ if __name__ == "__main__":
     parser.add_argument("--ocr_cache_path", required=True, help="Path to the OCR cache file.")
     parser.add_argument("--output_dir", required=True, help="Path to the directory where features will be saved.")
     parser.add_argument("--mode", default="train", choices=["train", "test"], help="Mode: 'train' or 'test'.")
+    parser.add_argument("--image_model_name", default="google/vit-base-patch16-224", help="Name of the image model to use.")
+    parser.add_argument("--text_model_name", default="jinaai/jina-embeddings-v3", help="Name of the text model to use.")
 
     args = parser.parse_args()
 
@@ -173,5 +180,7 @@ if __name__ == "__main__":
         image_folder=args.image_folder,
         ocr_cache_path=args.ocr_cache_path,
         output_dir=args.output_dir,
-        mode=args.mode
+        mode=args.mode,
+        image_model_name=args.image_model_name,
+        text_model_name=args.text_model_name
     )
