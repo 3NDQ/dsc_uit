@@ -27,8 +27,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.dropout_rate = dropout_rate
         self.dropout = nn.Dropout(dropout_rate)
         
-        # Assuming image_features are of size 2048 and text_features are of size 1024 after encoding
-        image_feature_size = 2048  
+        image_feature_size = 2024  
         text_feature_size = 1024
 
         self.image_dense1 = nn.Linear(image_feature_size, 1024)
