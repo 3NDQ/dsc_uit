@@ -23,18 +23,15 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.gamma = gamma
         self.class_weight = class_weight
 
-        text_hidden_size = self.text_encoder.config.hidden_size
-        image_hidden_size = self.image_encoder.config.hidden_size
-
         if self.fusion_method == 'cross_attention':
-            self.text_to_image_attention = CrossAttention(d_in=text_hidden_size, d_out_kq=image_hidden_size, d_out_v=image_hidden_size)
-            self.image_to_text_attention = CrossAttention(d_in=image_hidden_size, d_out_kq=text_hidden_size, d_out_v=text_hidden_size)
-            combined_size = text_hidden_size + image_hidden_size 
+            self.text_to_image_attention = CrossAttention(d_in=1024, d_out_kq=2024, d_out_v=2024)
+            self.image_to_text_attention = CrossAttention(d_in=2024, d_out_kq=1024, d_out_v=1024)
+            combined_size = 1024 + 2024 
         elif self.fusion_method == 'attention':
-            self.self_attention = SelfAttention(d_in=image_hidden_size + text_hidden_size, d_out_kq=image_hidden_size + text_hidden_size, d_out_v=image_hidden_size + text_hidden_size)
-            combined_size = image_hidden_size + text_hidden_size
+            self.self_attention = SelfAttention(d_in=2024 + 1024, d_out_kq=2024 + 1024, d_out_v=2024 + 1024)
+            combined_size = 2024 + 1024
         else:
-            combined_size = image_hidden_size + text_hidden_size
+            combined_size = 2024 + 1024
 
         self.fc = nn.Sequential(
             nn.Linear(combined_size, combined_size // 2),
