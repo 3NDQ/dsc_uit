@@ -12,7 +12,8 @@ class VietnameseSarcasmClassifier(nn.Module):
                  class_weight_tensor,
                  fusion_method='concat',
                  num_labels=4,
-                 gamma=2.0):  # Add gamma parameter
+                 gamma=2.0):
+        
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
         self.mode = mode
@@ -28,10 +29,6 @@ class VietnameseSarcasmClassifier(nn.Module):
         elif self.fusion_method == 'attention':
             self.self_attention = SelfAttention(d_in=768+768+ 768, d_out_kq=768+768+768, d_out_v=768 + 768 + 768)
             
-        self.mixer = nn.Linear(768 + 768, 2) 
-        self.text_refinement = nn.Linear(768, 768)
-        self.image_refinement = nn.Linear(768, 768)    
-        
         # Define the output layer
         combined_size = 0
         if self.fusion_method == 'concat':
@@ -40,6 +37,7 @@ class VietnameseSarcasmClassifier(nn.Module):
           combined_size = 768 + 768 + 768 +768
         elif self.fusion_method == 'attention':
           combined_size = 768 + 768 + 768
+          
         self.fc = nn.Sequential(
             nn.Linear(combined_size, combined_size // 2),
             nn.ReLU(),
