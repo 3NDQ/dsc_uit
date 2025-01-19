@@ -35,7 +35,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         
         self.fusion_dense = nn.Linear(3584, 2048)
         self.fusion_dense1 = nn.Linear(2048, 1024)
-        self.fusion_dense2 = nn.Linear(2048, 512)
+        self.fusion_dense2 = nn.Linear(1024, 512)
 
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
