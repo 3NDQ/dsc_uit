@@ -128,9 +128,6 @@ class SelfAttention(nn.Module):
         context_vec = attn_weights.matmul(values)
         return context_vec
 
-class CrossAttention(nn.Module):
-import torch
-import torch.nn as nn
 
 class CrossAttention(nn.Module):
     def __init__(self, d_in, d_out_kq, d_out_v, num_heads):
