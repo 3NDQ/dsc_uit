@@ -29,14 +29,14 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.label_smoothing = label_smoothing
 
         # Define the image branch
-        self.image_dense1 = nn.Linear(2024, 1000)  # Adjust input size based on your image features
+        self.image_dense1 = nn.Linear(2024, 1000) 
         self.image_dropout1 = nn.Dropout(dropout_rate)
         self.image_dense2 = nn.Linear(1000, 512)
         self.image_dropout2 = nn.Dropout(dropout_rate)
         self.image_dense3 = nn.Linear(512, 256)
 
         # Define the text branch
-        self.text_dense1 = nn.Linear(1024, 1024)  # Adjust input size based on your text features
+        self.text_dense1 = nn.Linear(1024, 1024) 
         self.text_dropout1 = nn.Dropout(dropout_rate)
         self.text_dense2 = nn.Linear(1024, 512)
 
