@@ -53,6 +53,8 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
                 loss, logits = outputs
 
             scaler.scale(loss).backward()
+            # Gradient Clipping
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0) # Add here
             scaler.step(optimizer)
             scaler.update()
             scheduler.step()

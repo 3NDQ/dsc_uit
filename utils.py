@@ -69,16 +69,6 @@ class MultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(dropout_rate)
         
     def scaled_dot_product_attention(self, Q, K, V, mask=None):
-        """
-        Computes scaled dot-product attention.
-        Args:
-            Q: Query tensor of shape (batch_size, num_heads, seq_len, d_k)
-            K: Key tensor of shape (batch_size, num_heads, seq_len, d_k)
-            V: Value tensor of shape (batch_size, num_heads, seq_len, d_k)
-            mask: Optional mask tensor of shape (batch_size, seq_len, seq_len)
-        Returns:
-            Attention output and attention weights
-        """
         d_k = Q.size(-1)
         scores = torch.matmul(Q, K.transpose(-2, -1)) / torch.sqrt(torch.tensor(d_k, dtype=torch.float32))
         
@@ -92,38 +82,14 @@ class MultiHeadAttention(nn.Module):
         return output, attn_weights
     
     def split_heads(self, x):
-        """
-        Splits the input into multiple heads.
-        Args:
-            x: Input tensor of shape (batch_size, seq_len, d_model)
-        Returns:
-            Tensor of shape (batch_size, num_heads, seq_len, d_k)
-        """
         batch_size, seq_len, d_model = x.size()
         return x.view(batch_size, seq_len, self.num_heads, self.d_k).transpose(1, 2)
     
     def combine_heads(self, x):
-        """
-        Combines the outputs from multiple heads.
-        Args:
-            x: Tensor of shape (batch_size, num_heads, seq_len, d_k)
-        Returns:
-            Tensor of shape (batch_size, seq_len, d_model)
-        """
         batch_size, _, seq_len, d_k = x.size()
         return x.transpose(1, 2).contiguous().view(batch_size, seq_len, self.d_model)
     
     def forward(self, Q, K, V, mask=None):
-        """
-        Forward pass for multi-head attention.
-        Args:
-            Q: Query tensor of shape (batch_size, seq_len, d_model)
-            K: Key tensor of shape (batch_size, seq_len, d_model)
-            V: Value tensor of shape (batch_size, seq_len, d_model)
-            mask: Optional mask tensor of shape (batch_size, seq_len, seq_len)
-        Returns:
-            Output tensor of shape (batch_size, seq_len, d_model)
-        """
         # Linear transformations
         Q = self.W_q(Q)
         K = self.W_k(K)
@@ -147,44 +113,38 @@ class MultiHeadAttention(nn.Module):
 class SelfAttention(nn.Module):
     def __init__(self, d_in, d_out_kq, d_out_v):
         super().__init__()
-        self.d_out_kq=d_out_kq
-        self.W_query=nn.Parameter(torch.rand(d_in, d_out_kq))
-        self.W_key=nn.Parameter(torch.rand(d_in, d_out_kq))
-        self.W_value=nn.Parameter(torch.rand(d_in, d_out_v))
-        
+        self.d_out_kq = d_out_kq
+        self.W_query = nn.Parameter(torch.randn(d_in, d_out_kq) * (1. / d_in**0.5))  # Scaled initialization
+        self.W_key = nn.Parameter(torch.randn(d_in, d_out_kq) * (1. / d_in**0.5))  # Scaled initialization
+        self.W_value = nn.Parameter(torch.randn(d_in, d_out_v) * (1. / d_in**0.5))  # Scaled initialization
+
     def forward(self, x):
-        keys=x.matmul(self.W_key)
-        queries=x.matmul(self.W_query)
-        values=x.matmul(self.W_value)
-        
-        attn_scores=queries.matmul(keys.T)
-        
-        attn_weights=torch.softmax(
-            attn_scores/self.d_out_kq**0.5, dim=-1
-        )
-        
-        context_vex=attn_weights.matmul(values)
-        return context_vex
+        keys = x.matmul(self.W_key)
+        queries = x.matmul(self.W_query)
+        values = x.matmul(self.W_value)
+        attn_scores = queries.matmul(keys.T)
+        attn_scores = attn_scores / (self.d_out_kq ** 0.5)  # Add scaling here
+        attn_weights = torch.softmax(attn_scores, dim=-1)
+        context_vec = attn_weights.matmul(values)
+        return context_vec
 
 class CrossAttention(nn.Module):
     def __init__(self, d_in, d_out_kq, d_out_v):
         super().__init__()
-        self.d_out_kq=d_out_kq
-        self.W_query=nn.Parameter(torch.rand(d_in, d_out_kq))
-        self.W_key  = nn.Parameter(torch.rand(d_in, d_out_kq))
-        self.W_value=nn.Parameter(torch.rand(d_in, d_out_v))
-    
+        self.d_out_kq = d_out_kq
+        self.d_out_v = d_out_v
+
+        self.W_query = nn.Linear(d_in, d_out_kq)
+        self.W_key = nn.Linear(d_in, d_out_kq)
+        self.W_value = nn.Linear(d_in, d_out_v)
+
     def forward(self, x_1, x_2):
-        queries_1=x_1.matmul(self.W_query)
-        keys_2=x_2.matmul(self.W_key)
-        values_2=x_2.matmul(self.W_value)
-        
-        attn_scores=queries_1.matmul(keys_2.T)
-        attn_weights=torch.softmax(
-            attn_scores/self.d_out_kq**0.5, dim=-1
-        )
-        
-        context_vec=attn_weights.matmul(values_2)
+        queries_1 = self.W_query(x_1) 
+        keys_2 = self.W_key(x_2)
+        values_2 = self.W_value(x_2)
+        attn_scores = queries_1.matmul(keys_2.T)
+        attn_weights = torch.softmax(attn_scores / (self.d_out_kq ** 0.5), dim=-1)
+        context_vec = attn_weights.matmul(values_2)
         return context_vec
 
 class EarlyStopping:
