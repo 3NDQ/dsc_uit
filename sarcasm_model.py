@@ -12,8 +12,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                  class_weight_tensor,
                  fusion_method='concat',
                  num_labels=4,
-                 gamma=2.0):
-        
+                 gamma=2.0):  # Add gamma parameter
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
         self.mode = mode
@@ -34,16 +33,10 @@ class VietnameseSarcasmClassifier(nn.Module):
         if self.fusion_method == 'concat':
           combined_size = 768 + 768 + 768 
         elif self.fusion_method == 'cross_attention':
-          combined_size = 768 + 768 + 768 +768
+          combined_size = 768 + 768 + 768+768
         elif self.fusion_method == 'attention':
           combined_size = 768 + 768 + 768
-          
-        self.fc = nn.Sequential(
-            nn.Linear(combined_size, combined_size // 2),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            nn.Linear(combined_size // 2, num_labels)
-        )
+        self.fc = nn.Linear(combined_size, num_labels)
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=class_weight_tensor)
 
     def forward(self, image_features, text_features, labels=None):
@@ -61,8 +54,9 @@ class VietnameseSarcasmClassifier(nn.Module):
             combined_features = torch.cat((image_features, text_features), dim=1)
     
         logits = self.fc(combined_features)
-
+    
         if labels is not None:
+            # Calculate loss using Focal Loss
             loss = self.loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             return loss, logits
         else:
