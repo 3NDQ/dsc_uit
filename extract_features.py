@@ -12,7 +12,6 @@ import argparse
 def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_dir, mode="train", image_model_name="google/vit-base-patch16-224", text_model_name="jinaai/jina-embeddings-v3"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Use model names from arguments
     image_processor = AutoImageProcessor.from_pretrained(image_model_name, use_fast=True)
     image_encoder = AutoModelForImageClassification.from_pretrained(image_model_name).to(device).to(torch.float32)
     if text_model_name == "jinaai/jina-embeddings-v3":
