@@ -104,9 +104,6 @@ def run_train(train_json, train_image_folder, tokenizer,
         image_folder=train_image_folder, 
         text_tokenizer=tokenizer, 
         ocr_cache_path=train_ocr_cache_path,
-        loss_func=loss_func,
-        gamma_focal=gamma_focal,
-        alpha_focal=alpha_focal,
     )
     
     # Extract labels for stratified splitting
@@ -150,7 +147,8 @@ def run_train(train_json, train_image_folder, tokenizer,
     
     # Initialize model with passed encoders
     try:
-        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method).to(device)
+        model = VietnameseSarcasmClassifier(text_encoder, image_encoder, fusion_method, 
+                                            loss_func, gamma_focal, alpha_focal).to(device)
         logging.info('Model initialized and moved to device')
     except Exception as e:
         logging.error(f"Failed to initialize the model: {e}")
