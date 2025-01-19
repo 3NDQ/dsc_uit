@@ -29,7 +29,7 @@ def run_test(test_features_dir, text_encoder, image_encoder, device, batch_size,
     logging.info("Starting testing with multiple models...")
 
     # Load pre-extracted features
-    test_image_features = np.load(os.path.join(test_features_dir, "image_features.npy"))
+    test_image_features = np.load(os.path.join(test_features_dir, "combined_image_features.npy"))
     test_text_features = np.load(os.path.join(test_features_dir, "text_features.npy"))
 
     # Convert to a single NumPy array
