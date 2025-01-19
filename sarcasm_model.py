@@ -37,7 +37,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         if self.fusion_method == 'concat':
           combined_size = 768 + 768 + 768 
         elif self.fusion_method == 'cross_attention':
-          combined_size = 768 + 768 + 768 + 768
+          combined_size = 768 + 768 + 768 +768
         elif self.fusion_method == 'attention':
           combined_size = 768 + 768 + 768
         self.fc = nn.Sequential(
@@ -49,14 +49,6 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=class_weight_tensor)
 
     def forward(self, image_features, text_features, labels=None):
-        mixer_input = torch.cat((image_features, text_features), dim=1)
-        attention_weights = torch.softmax(self.mixer(mixer_input), dim=1)
-        alpha_image, alpha_text = attention_weights[:, 0].unsqueeze(1), attention_weights[:, 1].unsqueeze(1)
-        mixed_features = alpha_image * image_features + alpha_text * text_features
-        
-        refined_text_features = text_features + self.text_refinement(text_features)
-        refined_image_features = image_features + self.image_refinement(image_features)
-        
         if self.fusion_method == 'cross_attention':
             attended_text = self.text_to_image_attention(text_features, image_features)
             attended_image = self.image_to_text_attention(image_features, text_features)
@@ -73,7 +65,6 @@ class VietnameseSarcasmClassifier(nn.Module):
         logits = self.fc(combined_features)
 
         if labels is not None:
-            # Calculate loss using Focal Loss
             loss = self.loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
             return loss, logits
         else:
