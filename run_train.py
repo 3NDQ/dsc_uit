@@ -101,6 +101,8 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     # Load pre-extracted features
     train_image_features = np.load(os.path.join(train_features_dir, "combined_image_features.npy"))
     train_text_features = np.load(os.path.join(train_features_dir, "text_features.npy"))
+    train_ocr_features = np.load(os.path.join(train_features_dir, "ocr_features.npy"))
+    train_only_image_features = np.load(os.path.join(train_features_dir, "image_features.npy"))
 
     # Load labels
     with open(os.path.join(train_features_dir, "labels.json"), "r") as f:
@@ -123,6 +125,8 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     # Convert to single NumPy array
     train_image_features = np.squeeze(np.array(train_image_features))
     train_text_features = np.squeeze(np.array(train_text_features))
+    train_ocr_features = np.squeeze(np.array(train_ocr_features))
+    train_only_image_features = np.squeeze(np.array(train_only_image_features))
 
     # Split data into training and validation sets
     train_img_feats, val_img_feats, train_text_feats, val_text_feats, train_labels, val_labels = train_test_split(

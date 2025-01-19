@@ -51,25 +51,24 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(512, 512 // 2),
             nn.ReLU(),
-            nn.Dropout(dropout_rate),
+            self.dropout(dropout_rate),
             nn.Linear(512 // 2, num_labels),
         )
-        self.class_weight = [1, 94.97, 5, 1]
         logging.info(f"Using class_weight: {self.class_weight}")
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
 
     def forward(self, image_features, text_features, labels=None):
         
         image_out = self.image_dense(image_features)
-        image_out = nn.ReLU()(image_out)
+        image_out = nn.GELU()(image_out)
         image_out = self.dropout(image_out)
         
         text_out1 = self.text_dense1(text_features)
-        text_out1 = nn.ReLU()(text_out1)
+        text_out1 = nn.GELU()(text_out1)
         text_out1 = self.dropout(text_out1)
         
         text_out2 = self.text_dense2(text_features)
-        text_out2 = nn.ReLU()(text_out2)
+        text_out2 = nn.GELU()(text_out2)
         text_out2 = self.dropout(text_out2)
         
         text_out_combined = torch.cat((text_out1, text_out2), dim=1)

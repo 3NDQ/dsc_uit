@@ -31,11 +31,15 @@ def run_test(test_features_dir, text_encoder, image_encoder, device, batch_size,
     # Load pre-extracted features
     test_image_features = np.load(os.path.join(test_features_dir, "combined_image_features.npy"))
     test_text_features = np.load(os.path.join(test_features_dir, "text_features.npy"))
+    test_ocr_features = np.load(os.path.join(test_features_dir, "ocr_features.npy"))
+    test_only_image_features = np.load(os.path.join(test_features_dir, "image_features.npy"))
 
     # Convert to a single NumPy array
     test_image_features = np.squeeze(np.array(test_image_features))
     test_text_features = np.squeeze(np.array(test_text_features))
-
+    test_ocr_features = np.squeeze(np.array(test_ocr_features))
+    test_only_image_features = np.squeeze(np.array(test_only_image_features))
+    
     # Create a TensorDataset
     test_dataset = TensorDataset(
         torch.tensor(test_image_features, dtype=torch.float),
