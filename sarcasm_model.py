@@ -39,8 +39,8 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=class_weight_tensor)
 
     def forward(self, image_features, text_features, labels=None):
-        print(len(image_features))
-        print(len(text_features))
+        logging.info(len(image_features))
+        logging.info(len(text_features))
         if self.fusion_method == 'cross_attention':
             attended_text = self.text_to_image_attention(text_features, image_features)
             attended_image = self.image_to_text_attention(image_features, text_features)
