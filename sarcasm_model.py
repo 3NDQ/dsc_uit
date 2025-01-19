@@ -9,6 +9,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                  mode,
                  text_encoder,
                  image_encoder,
+                 class_weight_tensor,
                  fusion_method='concat',
                  num_labels=4,
                  gamma=2.0):  # Add gamma parameter
@@ -27,19 +28,35 @@ class VietnameseSarcasmClassifier(nn.Module):
         elif self.fusion_method == 'attention':
             self.self_attention = SelfAttention(d_in=768+768+ 768, d_out_kq=768+768+768, d_out_v=768 + 768 + 768)
             
+        self.mixer = nn.Linear(768 + 768, 2) 
+        self.text_refinement = nn.Linear(768, 768)
+        self.image_refinement = nn.Linear(768, 768)    
+        
         # Define the output layer
         combined_size = 0
         if self.fusion_method == 'concat':
           combined_size = 768 + 768 + 768 
         elif self.fusion_method == 'cross_attention':
-          combined_size = 768 + 768 + 768+768
+          combined_size = 768 + 768 + 768 + 768
         elif self.fusion_method == 'attention':
           combined_size = 768 + 768 + 768
-        self.fc = nn.Linear(combined_size, num_labels)
-        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=[0.3, 0.15, 0.15, 0.4])
+        self.fc = nn.Sequential(
+            nn.Linear(combined_size, combined_size // 2),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(combined_size // 2, num_labels)
+        )
+        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=class_weight_tensor)
 
     def forward(self, image_features, text_features, labels=None):
-        # Combine features based on fusion method
+        mixer_input = torch.cat((image_features, text_features), dim=1)
+        attention_weights = torch.softmax(self.mixer(mixer_input), dim=1)
+        alpha_image, alpha_text = attention_weights[:, 0].unsqueeze(1), attention_weights[:, 1].unsqueeze(1)
+        mixed_features = alpha_image * image_features + alpha_text * text_features
+        
+        refined_text_features = text_features + self.text_refinement(text_features)
+        refined_image_features = image_features + self.image_refinement(image_features)
+        
         if self.fusion_method == 'cross_attention':
             attended_text = self.text_to_image_attention(text_features, image_features)
             attended_image = self.image_to_text_attention(image_features, text_features)
@@ -48,10 +65,11 @@ class VietnameseSarcasmClassifier(nn.Module):
             combined_features = torch.cat((image_features, text_features), dim=1)
             attended_features = self.self_attention(combined_features)
             combined_features = attended_features
+        elif self.fusion_method == 'mean':
+            combined_features = torch.cat((image_features.mean(), text_features.mean()), dim=1)
         else:
             combined_features = torch.cat((image_features, text_features), dim=1)
-
-        
+    
         logits = self.fc(combined_features)
 
         if labels is not None:

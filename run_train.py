@@ -16,9 +16,9 @@ import numpy as np
 import json
 from sklearn.utils.class_weight import compute_class_weight
 
-def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate):
+def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate, class_weights_tensor):
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
-
+    model.foca
     num_training_steps = len(train_dataloader) * num_epochs
     num_warmup_steps = num_training_steps // 10
     scheduler = get_linear_schedule_with_warmup(
@@ -88,7 +88,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         if early_stopping.early_stop:
             logging.info("Early stopping triggered")
             break
-
+        
     best_f1, best_epoch, best_model_file = max(best_models, key=lambda x: x[0])
     model.load_state_dict(torch.load(best_model_file))
     logging.info(f"Best model from epoch {best_epoch+1} with F1 score {best_f1:.4f} loaded.")
@@ -163,6 +163,6 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     # Train the model
     logging.info('Start training model...')
     model = train_model(
-        model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate
+        model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate, class_weights_tensor
     )
     logging.info('Model training complete')

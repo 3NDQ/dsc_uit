@@ -1,10 +1,28 @@
 # utils.py
 import torch.nn as nn
 import torch
+import torch.nn.functional as F
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from tqdm import tqdm
 import logging
 
+class WeightedFocalLoss(nn.Module):
+    def __init__(self, alpha, gamma=2, reduction='none'):
+        super(WeightedFocalLoss, self).__init__()
+        self.alpha = alpha
+        self.gamma = gamma
+        self.reduction = reduction
+        
+    def forward(self, inputs, targets):
+
+        BCE_loss = F.nll_loss(inputs, targets, reduction=self.reduction)
+        targets = targets.type(torch.long)
+        # at = self.alpha.gather(0, targets.data.view(-1))
+        pt = torch.exp(-BCE_loss)
+        F_loss = self.alpha[targets] * (1-pt) ** self.gamma * BCE_loss
+        loss_weighted_manual = F_loss.sum() / self.alpha[targets].sum()
+        return loss_weighted_manual
+    
 class FocalLoss(nn.Module):
     def __init__(self, alpha=None, gamma=2, reduction='mean'):
         super(FocalLoss, self).__init__()
@@ -18,9 +36,7 @@ class FocalLoss(nn.Module):
         ce_loss = nn.CrossEntropyLoss(reduction='none')(logits, targets)
         pt = torch.exp(-ce_loss)
         if self.alpha is not None:
-            # Make alpha device-compatible
             alpha = self.alpha.to(targets.device)
-            # Use alpha according to class
             alpha_t = alpha.gather(0, targets.data.view(-1))
             focal_loss = alpha_t * (1 - pt) ** self.gamma * ce_loss
         else:
