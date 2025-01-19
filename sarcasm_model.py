@@ -28,8 +28,8 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.dropout = nn.Dropout(dropout_rate)
         
         
-        self.image_dense1 = nn.Linear(2024, 2048)
-        self.image_dense2 = nn.Linear(2048, 1024)
+        self.image_dense1 = nn.Linear(2024, 1024)
+        self.image_dense2 = nn.Linear(1024, 1024)
 
         self.text_dense1 = nn.Linear(1024, 512)
         self.text_dense3 = nn.Linear(512, 256)
@@ -39,8 +39,8 @@ class VietnameseSarcasmClassifier(nn.Module):
 
         self.text_dense5 = nn.Linear(1536, 1024)
     
-        self.fusion_dense = nn.Linear(2048, 1024)
-        self.fusion_dense1 = nn.Linear(1024, 512)
+        self.fusion_dense1 = nn.Linear(2048, 1024)
+        self.fusion_dense2 = nn.Linear(1024, 512)
 
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
@@ -54,10 +54,10 @@ class VietnameseSarcasmClassifier(nn.Module):
             combined_size = 2048
             
         self.fc = nn.Sequential(
-            nn.Linear(1024, 512),
+            nn.Linear(512, 256),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-            nn.Linear(512, num_labels),
+            nn.Linear(256, num_labels),
         )
         logging.info(f"Using class_weight: {self.class_weight}")
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
@@ -104,11 +104,11 @@ class VietnameseSarcasmClassifier(nn.Module):
         else:
             combined_features = torch.cat((image_out, text_out_combined), dim=1)
             
-        fusion_out = self.fusion_dense(combined_features)
+        fusion_out = self.fusion_dense1(combined_features)
         fusion_out = nn.ReLU()(fusion_out)
         fusion_out = self.dropout(fusion_out)
         
-        fusion_out = self.fusion_dense1(fusion_out)
+        fusion_out = self.fusion_dense2(fusion_out)
         fusion_out = nn.ReLU()(fusion_out)
         fusion_out = self.dropout(fusion_out)
         
