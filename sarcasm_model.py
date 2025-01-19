@@ -51,7 +51,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.fc = nn.Sequential(
             nn.Linear(512, 512 // 2),
             nn.ReLU(),
-            self.dropout(dropout_rate),
+            nn.Dropout(dropout_rate),
             nn.Linear(512 // 2, num_labels),
         )
         logging.info(f"Using class_weight: {self.class_weight}")
