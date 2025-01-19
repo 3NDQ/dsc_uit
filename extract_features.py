@@ -15,9 +15,13 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
     # Use model names from arguments
     image_processor = AutoImageProcessor.from_pretrained(image_model_name, use_fast=True)
     image_encoder = AutoModelForImageClassification.from_pretrained(image_model_name).to(device).to(torch.float32)
-    text_tokenizer = AutoTokenizer.from_pretrained(text_model_name, trust_remote_code=True, use_flash_attn=False)
-    text_encoder = AutoModel.from_pretrained(text_model_name, trust_remote_code=True, use_flash_attn=False).to(device).to(torch.float32)
-    
+    if text_model_name == "jinaai/jina-embeddings-v3":
+        text_tokenizer = AutoTokenizer.from_pretrained(text_model_name, trust_remote_code=True, use_flash_attn=False)
+        text_encoder = AutoModel.from_pretrained(text_model_name, trust_remote_code=True, use_flash_attn=False).to(device).to(torch.float32)
+    else:
+        text_tokenizer = AutoTokenizer.from_pretrained(text_model_name, trust_remote_code=True)
+        text_encoder = AutoModel.from_pretrained(text_model_name, trust_remote_code=True).to(device).to(torch.float32)
+
     print(f'Image Encoder Hidden Size: {image_encoder.config.hidden_size}')
     print(f'Text Encoder Hidden Size: {text_encoder.config.hidden_size}')
     print(f'Combined Feature Size: {image_encoder.config.hidden_size + text_encoder.config.hidden_size}')
