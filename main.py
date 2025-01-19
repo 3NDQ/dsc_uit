@@ -79,7 +79,8 @@ def main():
             val_size=args.val_size,
             random_state=args.random_state,
             gamma=args.gamma,
-            loss_type=args.loss_type  # Pass loss_type to run_train
+            loss_type=args.loss_type,
+            label_smoothing=args.label_smoothing
         )
     elif args.mode == 'test':
         run_test(
