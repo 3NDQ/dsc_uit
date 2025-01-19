@@ -29,31 +29,31 @@ class VietnameseSarcasmClassifier(nn.Module):
             self.image_self_attention = SelfAttention(d_in=self.image_hidden_size, d_out_kq=self.image_hidden_size, d_out_v=self.image_hidden_size)
             logging.info("Self-Attention layer initialized for feature fusion.")
         
-        # self.projector = nn.Sequential(
-        #     nn.Linear(combined_dim, 1024),
-        #     nn.LayerNorm(1024),
-        #     nn.ReLU(),
-        #     nn.Dropout(0.1),
-        #     nn.Linear(1024, 512),
-        #     nn.LayerNorm(512),
-        #     nn.ReLU(),
-        #     nn.Dropout(0.1)
-        # )
-        # Change projector to test
         self.projector = nn.Sequential(
             nn.Linear(combined_dim, 1024),
             nn.LayerNorm(1024),
             nn.ReLU(),
             nn.Dropout(0.1),
-            nn.Linear(1024, 768),
-            nn.LayerNorm(768),
-            nn.ReLU(),
-            nn.Dropout(0.1),
-            nn.Linear(768, 512),
+            nn.Linear(1024, 512),
             nn.LayerNorm(512),
             nn.ReLU(),
             nn.Dropout(0.1)
         )
+        # Change projector to test
+        # self.projector = nn.Sequential(
+        #     nn.Linear(combined_dim, 1024),
+        #     nn.LayerNorm(1024),
+        #     nn.ReLU(),
+        #     nn.Dropout(0.1),
+        #     nn.Linear(1024, 768),
+        #     nn.LayerNorm(768),
+        #     nn.ReLU(),
+        #     nn.Dropout(0.1),
+        #     nn.Linear(768, 512),
+        #     nn.LayerNorm(512),
+        #     nn.ReLU(),
+        #     nn.Dropout(0.1)
+        # )
         logging.info("Projector layers initialized.")
         
         # Classification heads
