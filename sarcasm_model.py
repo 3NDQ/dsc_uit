@@ -97,7 +97,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         fusion_out = nn.GELU()(fusion_out)
         fusion_out = self.dropout(fusion_out)
         
-        logits = self.fc(combined_features)
+        logits = self.fc(fusion_out)
 
         if labels is not None:
             loss = self.loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
