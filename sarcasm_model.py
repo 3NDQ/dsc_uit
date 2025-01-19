@@ -31,22 +31,27 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.image_dense1 = nn.Linear(2024, 2048)
         self.image_dense2 = nn.Linear(2048, 1024)
 
-        self.text_dense1 = nn.Linear(1024, 1024)
+        self.text_dense1 = nn.Linear(1024, 512)
+        self.text_dense3 = nn.Linear(512, 256)
+
         self.text_dense2 = nn.Linear(1024, 512)
-        
-        self.fusion_dense = nn.Linear(3584, 2048)
-        self.fusion_dense1 = nn.Linear(2048, 1024)
+        self.text_dense4 = nn.Linear(512, 256)
+
+        self.text_dense5 = nn.Linear(1536, 1024)
+    
+        self.fusion_dense = nn.Linear(2048, 1024)
+        self.fusion_dense1 = nn.Linear(1024, 512)
 
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
             self.text_to_image_attention = CrossAttention(d_in_q=1024, d_in_kv=2024, d_out_kq=2024, d_out_v=2024)  # d_in for W_query should be 1024 (text_features)
             self.image_to_text_attention = CrossAttention(d_in_q=2024, d_in_kv=1024, d_out_kq=1024, d_out_v=1024)  # d_in for W_query should be 2024 (image_features)
-            combined_size = 3584
+            combined_size = 2048
         elif self.fusion_method == 'attention':
-            self.self_attention = SelfAttention(d_in=3584, d_out_kq=2048, d_out_v=2048)
-            combined_size = 3584
+            self.self_attention = SelfAttention(d_in=2048, d_out_kq=1024, d_out_v=1024)
+            combined_size = 2048
         else:
-            combined_size = 3584
+            combined_size = 2048
             
         self.fc = nn.Sequential(
             nn.Linear(1024, 512),
@@ -71,7 +76,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_out1 = nn.ReLU()(text_out1)
         text_out1 = self.dropout(text_out1)
         
-        text_out1 = self.text_dense1(text_features)
+        text_out1 = self.text_dense1(text_out1)
         text_out1 = nn.ReLU()(text_out1)
         text_out1 = self.dropout(text_out1)
         
@@ -79,11 +84,14 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_out2 = nn.ReLU()(text_out2)
         text_out2 = self.dropout(text_out2)
         
-        text_out2 = self.text_dense2(text_features)
+        text_out2 = self.text_dense2(text_out2)
         text_out2 = nn.ReLU()(text_out2)
         text_out2 = self.dropout(text_out2)
         
         text_out_combined = torch.cat((text_out1, text_out2, text_features), dim=1)
+        text_out_combined = self.text_dense5(text_out_combined)
+        text_out_combined = nn.ReLU()(text_out_combined)
+        text_out_combined = self.dropout(text_out_combined)
         
         if self.fusion_method == 'cross_attention':
             attended_text = self.text_to_image_attention(text_features, image_features)
