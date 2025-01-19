@@ -9,7 +9,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                  mode,
                  text_encoder,
                  image_encoder,
-                 class_weight_tensor,
+                 class_weight,
                  fusion_method='concat',
                  num_labels=4,
                  gamma=2.0):  # Add gamma parameter
@@ -46,7 +46,8 @@ class VietnameseSarcasmClassifier(nn.Module):
             nn.Dropout(0.2),
             nn.Linear(combined_size // 4, num_labels)
         )
-        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=class_weight_tensor)
+        logging.info(f"Using class_weight: {class_weight}")
+        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=class_weight)
 
     def forward(self, image_features, text_features, labels=None):
         if self.fusion_method == 'cross_attention':

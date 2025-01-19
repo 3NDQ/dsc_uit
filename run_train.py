@@ -154,7 +154,7 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
         text_encoder=text_encoder,
         image_encoder=image_encoder,
         fusion_method=fusion_method,
-        class_weight_tensor=class_weights_tensor,  # Pass class weights here
+        class_weight=class_weights_tensor,
         gamma=gamma  # Pass gamma to the model
     ).to(device)
     logging.info('Model initialized and moved to device')
