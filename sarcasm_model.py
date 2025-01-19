@@ -45,12 +45,12 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.text_dense5 = nn.Linear(text_feature_size + 256 + 256, 512)
 
         if self.fusion_method == 'cross_attention':
-            self.text_to_image_attention = CrossAttention(d_in_q=512 + 512, d_in_kv=512, d_out_kq=512, d_out_v=512)
-            self.image_to_text_attention = CrossAttention(d_in_q=512, d_in_kv=512 + 512, d_out_kq=512, d_out_v=512)
+            self.text_to_image_attention = CrossAttention(d_in_q=512 + 512, d_in_kv=512, d_out_kq=512 + 512, d_out_v=512 + 512)
+            self.image_to_text_attention = CrossAttention(d_in_q=512, d_in_kv=512 + 512, d_out_kq=512 + 512, d_out_v=512 + 512)
             combined_size = 512 + 512 
         elif self.fusion_method == 'attention':
-            self.self_attention = SelfAttention(d_in=512 + 512, d_out_kq=512, d_out_v=512)
-            combined_size = 512
+            self.self_attention = SelfAttention(d_in=512 + 512, d_out_kq=51512 + 5122, d_out_v=512 + 512)
+            combined_size = 512 + 512
         else: # concat
             combined_size = 512 + 512
 
