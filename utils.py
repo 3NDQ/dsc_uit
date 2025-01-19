@@ -10,7 +10,7 @@ class WeightedCrossEntropyLoss(nn.Module):
         super(WeightedCrossEntropyLoss, self).__init__()
         self.weight = weight
         self.reduction = reduction
-        self.label_smoothing = label_smoothing  # Add label smoothing
+        self.label_smoothing = label_smoothing  
 
     def forward(self, logits, targets):
         if self.label_smoothing > 0:
@@ -21,7 +21,6 @@ class WeightedCrossEntropyLoss(nn.Module):
             loss = -(smooth_labels * log_probs).sum(dim=-1)
         else:
             loss = nn.CrossEntropyLoss(weight=self.weight, reduction='none')(logits, targets)
-
         if self.reduction == 'mean':
             return loss.mean()
         elif self.reduction == 'sum':
