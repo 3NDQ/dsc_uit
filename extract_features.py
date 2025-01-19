@@ -68,7 +68,7 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
     print(f"Features saved to {output_dir}")
 
 def preprocess_data(images, texts, image_processor, image_encoder, text_tokenizer, text_encoder, image_folder, ocr_cache_path, mode='train'):
-    image_features = []
+    image_combined_features = []
     ocr_features = []
     total_images = len(images)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -120,10 +120,10 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
             else:
                 combined_features = np.concatenate([image_features, np.zeros(text_encoder.config.hidden_size)])
 
-            image_features.append(combined_features)
+            image_combined_features.append(combined_features)
         except Exception as e:
             print(f"\nError processing image {image_name}: {str(e)}")
-            image_features.append(np.zeros(image_encoder.config.hidden_size + text_encoder.config.hidden_size))
+            image_combined_features.append(np.zeros(image_encoder.config.hidden_size + text_encoder.config.hidden_size))
 
     text_features = []
     total_texts = len(texts)
@@ -147,7 +147,7 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
             print(f"\nError processing text: {str(e)}")
             text_features.append(np.zeros(text_encoder.config.hidden_size))
 
-    return np.array(image_features), np.array(text_features)
+    return np.array(image_combined_features), np.array(text_features)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract features from image and text data.")
