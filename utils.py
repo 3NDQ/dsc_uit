@@ -129,24 +129,47 @@ class SelfAttention(nn.Module):
         return context_vec
 
 class CrossAttention(nn.Module):
+import torch
+import torch.nn as nn
+
+class CrossAttention(nn.Module):
     def __init__(self, d_in, d_out_kq, d_out_v, num_heads):
         super().__init__()
+        self.d_model = d_in  # Input dimension
         self.d_out_kq = d_out_kq
         self.d_out_v = d_out_v
         self.num_heads = num_heads
+        self.head_dim = d_out_kq // num_heads  # Dimension per head
 
-        self.W_query = nn.Linear(d_in, d_out_kq)
-        self.W_key = nn.Linear(d_in, d_out_kq)  
-        self.W_value = nn.Linear(d_in, d_out_v)
+        assert d_out_kq % num_heads == 0, "d_out_kq must be divisible by num_heads"
+
+        # Linear projections for Q, K, V for all heads at once
+        self.W_q = nn.Linear(d_in, d_out_kq)
+        self.W_k = nn.Linear(d_in, d_out_kq)
+        self.W_v = nn.Linear(d_in, d_out_v)
+
+        # Final linear layer for the combined output
+        self.fc_out = nn.Linear(d_out_v, d_out_v)  
 
     def forward(self, x_1, x_2):
-        queries_1 = self.W_query(x_1) 
-        keys_2 = self.W_key(x_2)
-        values_2 = self.W_value(x_2)
-        attn_scores = queries_1.matmul(keys_2.T)
-        attn_weights = torch.softmax(attn_scores / (self.d_out_kq ** 0.5), dim=-1)
-        context_vec = attn_weights.matmul(values_2)
-        return context_vec
+        batch_size = x_1.shape[0]
+
+        Q = self.W_q(x_1) 
+        K = self.W_k(x_2)  # (batch_size, seq_len_k, d_out_kq)
+        V = self.W_v(x_2)  # (batch_size, seq_len_k, d_out_v)
+        Q = Q.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)  # (batch_size, num_heads, seq_len_q, head_dim)
+        K = K.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)  # (batch_size, num_heads, seq_len_k, head_dim)
+        V = V.view(batch_size, -1, self.num_heads, self.head_dim).transpose(1, 2)  # (batch_size, num_heads, seq_len_k, head_dim)
+
+        energy = torch.matmul(Q, K.transpose(-2, -1)) / (self.head_dim ** 0.5)  # (batch_size, num_heads, seq_len_q, seq_len_k)
+        attn = torch.softmax(energy, dim=-1)  # (batch_size, num_heads, seq_len_q, seq_len_k)
+        out = torch.matmul(attn, V)  # (batch_size, num_heads, seq_len_q, head_dim)
+
+        out = out.transpose(1, 2).contiguous().view(batch_size, -1, self.d_out_v)  # (batch_size, seq_len_q, d_out_v)
+
+        out = self.fc_out(out) 
+
+        return out
     
 class EarlyStopping:
     def __init__(self, patience=5, min_delta=0):
