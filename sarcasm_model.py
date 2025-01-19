@@ -41,12 +41,12 @@ class VietnameseSarcasmClassifier(nn.Module):
         # We'll adjust the input sizes to match the outputs of the new processing
         self.text_projection = nn.Sequential(
             nn.Linear(512, 256),  # Adjusted input size
-            nn.ReLU(),
+            nn.GeLU(),
             nn.Dropout(dropout_rate)
         )
         self.image_projection = nn.Sequential(
             nn.Linear(2048, 256),  # Adjusted input size
-            nn.ReLU(),
+            nn.GeLU(),
             nn.Dropout(dropout_rate)
         )
 
@@ -79,22 +79,22 @@ class VietnameseSarcasmClassifier(nn.Module):
     def forward(self, image_features, text_features, labels=None):
         # --- Initial Processing (from "new" architecture) ---
         image_out = self.image_dense(image_features)
-        image_out = nn.ReLU()(image_out)
+        image_out = nn.GeLU()(image_out)
         image_out = self.image_dropout(image_out)
 
         text_out = self.text_dense1(text_features)
-        text_out = nn.ReLU()(text_out)
+        text_out = nn.GeLU()(text_out)
         text_out = self.text_dropout1(text_out)
 
         text_out_2 = self.text_dense3(text_features)
-        text_out_2 = nn.ReLU()(text_out_2)
+        text_out_2 = nn.GeLU()(text_out_2)
         text_out_2 = self.text_dropout2(text_out_2)
 
         text_out = self.text_dense2(text_out)
-        text_out = nn.ReLU()(text_out)
+        text_out = nn.GeLU()(text_out)
 
         text_out_2 = self.text_dense4(text_out_2)
-        text_out_2 = nn.ReLU()(text_out_2)
+        text_out_2 = nn.GeLU()(text_out_2)
         
         # --- Projection (from "old" architecture) ---
         # Note: We are now projecting the processed features
@@ -114,13 +114,13 @@ class VietnameseSarcasmClassifier(nn.Module):
             
         # --- Fusion and Output (from "new" architecture) ---
         fusion_out = self.fusion_dense5(attention_combined_features)
-        fusion_out = nn.ReLU()(fusion_out)
+        fusion_out = nn.GeLU()(fusion_out)
         fusion_out = self.fusion_dropout3(fusion_out)
         fusion_out = self.fusion_dense6(fusion_out)
-        fusion_out = nn.ReLU()(fusion_out)
+        fusion_out = nn.GeLU()(fusion_out)
         fusion_out = self.fusion_dropout4(fusion_out)
         fusion_out = self.fusion_dense7(fusion_out)
-        fusion_out = nn.ReLU()(fusion_out)
+        fusion_out = nn.GeLU()(fusion_out)
         fusion_out = self.fusion_dropout5(fusion_out)
 
         logits = self.fc(fusion_out)
