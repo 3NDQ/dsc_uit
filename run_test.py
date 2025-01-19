@@ -51,7 +51,7 @@ def run_test(test_features_dir, text_encoder, image_encoder, device, batch_size,
         mode="test",
         text_encoder=text_encoder,
         image_encoder=image_encoder,
-        fusion_method=fusion_method
+        fusion_method=fusion_method,
     ).to(device)
 
     # Load and test each model

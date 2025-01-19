@@ -21,6 +21,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.fusion_method = fusion_method
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.gamma = gamma  # Store gamma
+        self.class_weight = class_weight
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
             self.text_to_image_attention = CrossAttention(d_in=1024, d_out_kq=2024, d_out_v=2024)
@@ -46,8 +47,8 @@ class VietnameseSarcasmClassifier(nn.Module):
             nn.Dropout(0.2),
             nn.Linear(combined_size // 4, num_labels)
         )
-        logging.info(f"Using class_weight: {class_weight}")
-        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=class_weight)
+        logging.info(f"Using class_weight: {self.class_weight}")
+        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight)
 
     def forward(self, image_features, text_features, labels=None):
         if self.fusion_method == 'cross_attention':
