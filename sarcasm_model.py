@@ -36,14 +36,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         elif self.fusion_method == 'attention':
             self.self_attention = SelfAttention(d_in=1024 + 2024, d_out_kq=1024 + 2024, d_out_v=1024 + 2024, num_heads=attention_heads)
             combined_size = 1024 + 2024
-        elif self.fusion_method == 'element_wise_sum':
-            self.text_projection = nn.Linear(1024, 2024)
-            combined_size = 2024
-        elif self.fusion_method == 'gated':
-            self.text_gate = nn.Linear(1024, 1)
-            self.image_gate = nn.Linear(2024, 1)
-            combined_size = 1024 + 2024 
-        else:  
+        else:
             combined_size = 1024 + 2024
             
         self.fc = nn.Sequential(
@@ -65,14 +58,7 @@ class VietnameseSarcasmClassifier(nn.Module):
             combined_features = torch.cat((image_features, text_features), dim=1)
             attended_features = self.self_attention(combined_features)
             combined_features = attended_features
-        elif self.fusion_method == 'element_wise_sum':
-            projected_text = self.text_projection(text_features)
-            combined_features = projected_text + image_features
-        elif self.fusion_method == 'gated':
-            text_gate_val = torch.sigmoid(self.text_gate(text_features))
-            image_gate_val = torch.sigmoid(self.image_gate(image_features))
-            combined_features = torch.cat((text_gate_val * text_features, image_gate_val * image_features), dim=1)
-        else: 
+        else:
             combined_features = torch.cat((image_features, text_features), dim=1)
 
         logits = self.fc(combined_features)
