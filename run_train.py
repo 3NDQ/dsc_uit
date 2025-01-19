@@ -162,6 +162,6 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     # Train the model
     logging.info('Start training model...')
     model = train_model(
-        model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate, class_weights_tensor
+        model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate
     )
     logging.info('Model training complete')

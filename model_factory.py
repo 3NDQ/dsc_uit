@@ -1,5 +1,5 @@
 # model_factory.py
-from transformers import AutoModel, AutoTokenizer, AutoProcessor
+from transformers import AutoImageProcessor, AutoModel, AutoTokenizer, AutoModelForImageClassification
 import logging
 
 def get_tokenizer(tokenizer_name):
@@ -22,7 +22,7 @@ def get_text_encoder(model_name):
 
 def get_image_encoder(model_name):
     try:
-        image_encoder = AutoModel.from_pretrained(model_name, trust_remote_code=True)
+        image_encoder = AutoModelForImageClassification.from_pretrained(model_name, trust_remote_code=True)
         logging.info(f"Loaded image encoder: {model_name}")
         return image_encoder
     except Exception as e:
@@ -31,7 +31,7 @@ def get_image_encoder(model_name):
         
 def get_image_processor(processor_name):
     try:
-        processor = AutoProcessor.from_pretrained(processor_name)
+        processor = AutoImageProcessor.from_pretrained(processor_name)
         logging.info(f"Loaded image processor: {processor_name}")
         return processor
     except Exception as e:
