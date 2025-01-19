@@ -36,7 +36,6 @@ class VietnameseSarcasmClassifier(nn.Module):
         
         self.fusion_dense = nn.Linear(3584, 2048)
         self.fusion_dense1 = nn.Linear(2048, 1024)
-        self.fusion_dense2 = nn.Linear(1024, 512)
 
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
@@ -50,10 +49,10 @@ class VietnameseSarcasmClassifier(nn.Module):
             combined_size = 3584
             
         self.fc = nn.Sequential(
-            nn.Linear(512, 512 // 2),
+            nn.Linear(1024, 512),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-            nn.Linear(512 // 2, num_labels),
+            nn.Linear(512, num_labels),
         )
         logging.info(f"Using class_weight: {self.class_weight}")
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
@@ -102,10 +101,6 @@ class VietnameseSarcasmClassifier(nn.Module):
         fusion_out = self.dropout(fusion_out)
         
         fusion_out = self.fusion_dense1(fusion_out)
-        fusion_out = nn.ReLU()(fusion_out)
-        fusion_out = self.dropout(fusion_out)
-        
-        fusion_out = self.fusion_dense2(fusion_out)
         fusion_out = nn.ReLU()(fusion_out)
         fusion_out = self.dropout(fusion_out)
         
