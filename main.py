@@ -45,6 +45,7 @@ def main():
     parser.add_argument('--val_size', type=float, default=0.2, help='Val size for train test split')
     parser.add_argument('--random_state', type=int, default=42, help='Random state')
     parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention', 'cross_attention'], help='Method to fuse features: concat (default) or attention, cross_attention')
+    parser.add_argument('--loss_type', type=str, default='focal', choices=['focal', 'cross_entropy'], help='Loss type: focal or cross_entropy')
 
     # Hyperparameters for Focal Loss
     parser.add_argument('--gamma', type=float, default=2.0, help='Gamma parameter for Focal Loss')
@@ -76,7 +77,8 @@ def main():
             learning_rate=args.learning_rate,
             val_size=args.val_size,
             random_state=args.random_state,
-            gamma=args.gamma  # Pass gamma to run_train
+            gamma=args.gamma,
+            loss_type=args.loss_type  # Pass loss_type to run_train
         )
     elif args.mode == 'test':
         run_test(

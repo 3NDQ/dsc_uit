@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import logging
-from utils import CrossAttention, SelfAttention, FocalLoss
+from utils import CrossAttention, SelfAttention, FocalLoss, WeightedCrossEntropyLoss
 import numpy as np
 
 class VietnameseSarcasmClassifier(nn.Module):
@@ -13,7 +13,8 @@ class VietnameseSarcasmClassifier(nn.Module):
                  fusion_method='concat',
                  num_labels=4,
                  dropout_rate=0.2,
-                 gamma=5.0): 
+                 gamma=5.0,
+                 loss_type='focal'): 
         
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
@@ -22,11 +23,11 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.text_encoder = text_encoder
         self.fusion_method = fusion_method
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.loss_type = loss_type
         self.gamma = gamma  # Store gamma
         self.class_weight = class_weight
         self.dropout_rate = dropout_rate
         self.dropout = nn.Dropout(dropout_rate)
-        
         image_feature_size = 2024  
         text_feature_size = 1024
 
@@ -39,31 +40,36 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.text_dense2 = nn.Linear(text_feature_size, 512)
         self.text_dense4 = nn.Linear(512, 256)
 
-        self.text_dense5 = nn.Linear(text_feature_size + 256 + 256, 512) # Adjusted input size
+        self.text_dense5 = nn.Linear(text_feature_size + 256 + 256, 512)
 
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
             self.text_to_image_attention = CrossAttention(d_in_q=text_feature_size, d_in_kv=image_feature_size, d_out_kq=512, d_out_v=512)
             self.image_to_text_attention = CrossAttention(d_in_q=image_feature_size, d_in_kv=text_feature_size, d_out_kq=512, d_out_v=512)
-            combined_size_before_fusion = 512 + 512 
+            combined_size = 512 + 512 
         elif self.fusion_method == 'attention':
             self.self_attention = SelfAttention(d_in=image_feature_size + text_feature_size, d_out_kq=512, d_out_v=512)
-            combined_size_before_fusion = 512
+            combined_size = 512
         else: # concat
-            combined_size_before_fusion = 512 + 512
+            combined_size = 512 + 512
 
-        self.fusion_dense1 = nn.Linear(combined_size_before_fusion, 256)
-        self.fusion_dense2 = nn.Linear(256, 128)
+        self.fusion_dense1 = nn.Linear(combined_size, 512)
+        self.fusion_dense2 = nn.Linear(512, 512)
             
         self.fc = nn.Sequential(
-            nn.Linear(128, 64), # Reduce the size further
+            nn.Linear(512, 256),
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-            nn.Linear(64, num_labels),
+            nn.Linear(256, num_labels),
         )
 
         logging.info(f"Using class_weight: {self.class_weight}")
-        self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
+        if self.loss_type == 'focal':
+            self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
+        elif self.loss_type == 'cross_entropy':
+            self.loss_fct = WeightedCrossEntropyLoss(weight=self.class_weight)
+        else:
+            raise ValueError(f"Unsupported loss type: {self.loss_type}")
 
     def forward(self, image_features, text_features, labels=None):
         

@@ -5,7 +5,17 @@ import torch.nn.functional as F
 from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 from tqdm import tqdm
 import logging
+class WeightedCrossEntropyLoss(nn.Module):
+    def __init__(self, weight=None, reduction='mean'):
+        super(WeightedCrossEntropyLoss, self).__init__()
+        self.weight = weight
+        self.reduction = reduction
 
+    def forward(self, logits, targets):
+        if self.weight is not None:
+            self.weight = self.weight.to(targets.device)
+        ce_loss = nn.CrossEntropyLoss(weight=self.weight, reduction=self.reduction)(logits, targets)
+        return ce_loss
 class FocalLoss(nn.Module):
     def __init__(self, alpha=None, gamma=2, reduction='mean'):
         super(FocalLoss, self).__init__()
@@ -35,9 +45,9 @@ class SelfAttention(nn.Module):
     def __init__(self, d_in, d_out_kq, d_out_v):
         super().__init__()
         self.d_out_kq = d_out_kq
-        self.W_query = nn.Parameter(torch.randn(d_in, d_out_kq) * (1. / d_in**0.5))  # Scaled initialization
-        self.W_key = nn.Parameter(torch.randn(d_in, d_out_kq) * (1. / d_in**0.5))  # Scaled initialization
-        self.W_value = nn.Parameter(torch.randn(d_in, d_out_v) * (1. / d_in**0.5))  # Scaled initialization
+        self.W_query = nn.Parameter(torch.randn(d_in, d_out_kq) * (1. / d_in**0.5))
+        self.W_key = nn.Parameter(torch.randn(d_in, d_out_kq) * (1. / d_in**0.5)) 
+        self.W_value = nn.Parameter(torch.randn(d_in, d_out_v) * (1. / d_in**0.5)) 
 
     def forward(self, x):
         keys = x.matmul(self.W_key)
@@ -100,7 +110,7 @@ def evaluate_model(model, dataloader, device):
 
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating", leave=False):
-            image_features, text_features, labels = batch  # Adjusted for pre-extracted features
+            image_features, text_features, labels = batch 
             image_features = image_features.to(device)
             text_features = text_features.to(device)
             labels = labels.to(device)
