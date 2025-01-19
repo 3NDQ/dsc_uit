@@ -98,7 +98,7 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     logging.info("Starting training and evaluation...")
 
     # Load pre-extracted features
-    train_image_features = np.load(os.path.join(train_features_dir, "image_features.npy"))
+    train_image_features = np.load(os.path.join(train_features_dir, "combined_image_features.npy"))
     train_text_features = np.load(os.path.join(train_features_dir, "text_features.npy"))
 
     # Load labels
