@@ -73,6 +73,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.output_weights = nn.Parameter(torch.tensor([0, 1.0]))  # Learnable weights for combining outputs
 
         # --- Loss Function ---
+        self.class_weight = [0.01, 0.68, 0.3, 0.01]
         logging.info(f"Using class_weight: {self.class_weight}")
         # self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=[0.1, 0.5, 0.3, 0.1])

@@ -3,11 +3,10 @@ import logging
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 from utils import evaluate_model
-from sarcasm_model import FocalLoss
 from sarcasm_model import VietnameseSarcasmClassifier
 from sklearn.model_selection import train_test_split
 from transformers import get_linear_schedule_with_warmup
-from utils import EarlyStopping, FocalLoss
+from utils import EarlyStopping
 from torch.cuda import amp
 from tqdm import tqdm
 import heapq
