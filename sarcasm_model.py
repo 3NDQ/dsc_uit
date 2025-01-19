@@ -27,38 +27,42 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.dropout_rate = dropout_rate
         self.dropout = nn.Dropout(dropout_rate)
         
-        
-        self.image_dense1 = nn.Linear(2024, 1024)
-        self.image_dense2 = nn.Linear(1024, 1024)
+        # Assuming image_features are of size 2048 and text_features are of size 1024 after encoding
+        image_feature_size = 2048  
+        text_feature_size = 1024
 
-        self.text_dense1 = nn.Linear(1024, 512)
+        self.image_dense1 = nn.Linear(image_feature_size, 1024)
+        self.image_dense2 = nn.Linear(1024, 512) # Changed to 512
+
+        self.text_dense1 = nn.Linear(text_feature_size, 512)
         self.text_dense3 = nn.Linear(512, 256)
 
-        self.text_dense2 = nn.Linear(1024, 512)
+        self.text_dense2 = nn.Linear(text_feature_size, 512)
         self.text_dense4 = nn.Linear(512, 256)
 
-        self.text_dense5 = nn.Linear(1536, 1024)
-    
-        self.fusion_dense1 = nn.Linear(2048, 1024)
-        self.fusion_dense2 = nn.Linear(1024, 512)
+        self.text_dense5 = nn.Linear(text_feature_size + 256 + 256, 512) # Adjusted input size
 
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
-            self.text_to_image_attention = CrossAttention(d_in_q=1024, d_in_kv=2024, d_out_kq=2024, d_out_v=2024)  # d_in for W_query should be 1024 (text_features)
-            self.image_to_text_attention = CrossAttention(d_in_q=2024, d_in_kv=1024, d_out_kq=1024, d_out_v=1024)  # d_in for W_query should be 2024 (image_features)
-            combined_size = 2048
+            self.text_to_image_attention = CrossAttention(d_in_q=text_feature_size, d_in_kv=image_feature_size, d_out_kq=512, d_out_v=512)
+            self.image_to_text_attention = CrossAttention(d_in_q=image_feature_size, d_in_kv=text_feature_size, d_out_kq=512, d_out_v=512)
+            combined_size_before_fusion = 512 + 512 
         elif self.fusion_method == 'attention':
-            self.self_attention = SelfAttention(d_in=2048, d_out_kq=1024, d_out_v=1024)
-            combined_size = 2048
-        else:
-            combined_size = 2048
+            self.self_attention = SelfAttention(d_in=image_feature_size + text_feature_size, d_out_kq=512, d_out_v=512)
+            combined_size_before_fusion = 512
+        else: # concat
+            combined_size_before_fusion = 512 + 512
+
+        self.fusion_dense1 = nn.Linear(combined_size_before_fusion, 256)
+        self.fusion_dense2 = nn.Linear(256, 128)
             
         self.fc = nn.Sequential(
-            nn.Linear(512, 256),
+            nn.Linear(128, 64), # Reduce the size further
             nn.ReLU(),
             nn.Dropout(dropout_rate),
-            nn.Linear(256, num_labels),
+            nn.Linear(64, num_labels),
         )
+
         logging.info(f"Using class_weight: {self.class_weight}")
         self.loss_fct = FocalLoss(gamma=self.gamma, alpha=self.class_weight) if self.class_weight is not None else FocalLoss(gamma=self.gamma)
 
@@ -94,13 +98,12 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_out_combined = self.dropout(text_out_combined)
         
         if self.fusion_method == 'cross_attention':
-            attended_text = self.text_to_image_attention(text_features, image_features)
-            attended_image = self.image_to_text_attention(image_features, text_features)
+            attended_text = self.text_to_image_attention(text_out_combined, image_out)
+            attended_image = self.image_to_text_attention(image_out, text_out_combined)
             combined_features = torch.cat((attended_text, attended_image), dim=1)
         elif self.fusion_method == 'attention':
-            combined_features = torch.cat((image_features, text_features), dim=1)
-            attended_features = self.self_attention(combined_features)
-            combined_features = attended_features
+            combined_features = torch.cat((image_out, text_out_combined), dim=1)
+            combined_features = self.self_attention(combined_features)
         else:
             combined_features = torch.cat((image_out, text_out_combined), dim=1)
             
