@@ -5,12 +5,15 @@ import logging
 from utils import CrossAttention, SelfAttention, FocalLoss
 
 class VietnameseSarcasmClassifier(nn.Module):
-    def __init__(self, text_encoder, image_encoder, fusion_method='concat', num_labels=4):
+    def __init__(self, text_encoder, image_encoder, loss_func, alpha_focal, gamma_focal, fusion_method='concat', num_labels=4):
         super(VietnameseSarcasmClassifier, self).__init__()
         self.num_labels = num_labels
         self.image_encoder = image_encoder
         self.text_encoder = text_encoder
         self.fusion_method = fusion_method
+        self.loss_func = loss_func
+        self.alpha_focal = alpha_focal
+        self.gamma_focal = gamma_focal
         combined_dim = self.image_encoder.config.hidden_size + self.text_encoder.config.hidden_size
         logging.info(f"Combined dimension: {combined_dim}")
         
@@ -92,27 +95,13 @@ class VietnameseSarcasmClassifier(nn.Module):
         final_logits[:, 1] = text_logits[:, 1]
         final_logits[:, 2] = image_logits[:, 1]
         final_logits[:, 3] = 1 - (multi_logits[:, 1] + text_logits[:, 1] + image_logits[:, 1]).clamp(0, 1)
+        
         loss = None
-        image_count = 442
-        text_count = 77
-        multi_count = 4224
-        not_count = 6062
-
-        total_alpha = image_count + text_count + multi_count + not_count
-
-        alpha_image = image_count / total_alpha
-        alpha_text = text_count / total_alpha
-        alpha_multi = multi_count / total_alpha
-        alpha_not = not_count / total_alpha
-
-        # Normalizing alpha values to ensure they sum to 1
-        alpha = [alpha_multi, alpha_text, alpha_image, alpha_not]
-        alpha_sum = sum(alpha)
-        alpha = [a / alpha_sum for a in alpha]
-        # print(alpha)
         if labels is not None:
-            criterion = FocalLoss(alpha = alpha, gamma=2, reduction="mean")
-            # print(type(final_logits), type(labels))
+            if self.loss_func == 'FocalLoss':
+                criterion = FocalLoss(alpha = self.alph_focal, gamma=self.gamma_focal, reduction="mean")
+            else:
+                criterion = nn.CrossEntropyLoss()
             loss = criterion(final_logits, labels)
 
         return {'loss': loss, 'logits': final_logits} if loss is not None else final_logits

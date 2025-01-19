@@ -14,7 +14,7 @@ import heapq
 import os  
 from utils import evaluate_model  
 
-def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate):
+def train_model(model, train_dataloader, val_dataloader, device, num_epochs, patience, learning_rate, loss_func):
     optimizer = torch.optim.AdamW(model.parameters(), lr=learning_rate)
     
     num_training_steps = len(train_dataloader) * num_epochs
@@ -26,7 +26,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
     early_stopping = EarlyStopping(patience=patience)
     scaler = torch.amp.GradScaler()  # For mixed precision training
     
-    best_models = []  # List to store the top 5 models based on F1 score
+    best_models = []  # List to store the top 10 models based on F1 score
     
     for epoch in range(num_epochs):
         model.train()
@@ -57,10 +57,10 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         # Evaluate the model after training each epoch
         f1 = evaluate_model(model, val_dataloader, device, epoch)
         
-        # Save top 5 models based on F1 score
+        # Save top 10 models based on F1 score
         model_path = f"model_epoch_{epoch+1}.pth"
         torch.save(model.state_dict(), model_path)
-        if len(best_models) < 5:
+        if len(best_models) < 10:
             heapq.heappush(best_models, (f1, epoch, model_path))
             logging.info(f"Model saved at epoch {epoch+1}")
         else:
@@ -73,9 +73,9 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
                 heapq.heappush(best_models, (f1, epoch, model_path))
                 logging.info(f"Model saved at epoch {epoch+1}")
             else:
-                # Remove the current model file if it's not in top 5
+                # Remove the current model file if it's not in top 10
                 os.remove(model_path)
-                logging.info(f"Model at epoch {epoch+1} discarded, not in top 5")
+                logging.info(f"Model at epoch {epoch+1} discarded, not in top 10")
         
         # Early stopping check based on validation loss
         early_stopping(avg_train_loss)
@@ -95,7 +95,7 @@ def run_train(train_json, train_image_folder, tokenizer,
               device, batch_size, num_workers,
               learning_rate, val_size, random_state,
               train_ocr_cache_path, num_epochs, patience,
-              text_encoder, image_encoder, fusion_method):
+              text_encoder, image_encoder, fusion_method, loss_func, gamma_focal, alpha_focal):
     logging.info("Starting TRAINING and EVALUATION...")
     
     # Create train dataset with OCR caching parameters
@@ -104,6 +104,9 @@ def run_train(train_json, train_image_folder, tokenizer,
         image_folder=train_image_folder, 
         text_tokenizer=tokenizer, 
         ocr_cache_path=train_ocr_cache_path,
+        loss_func=loss_func,
+        gamma_focal=gamma_focal,
+        alpha_focal=alpha_focal,
     )
     
     # Extract labels for stratified splitting
@@ -162,6 +165,6 @@ def run_train(train_json, train_image_folder, tokenizer,
         device, 
         num_epochs=num_epochs, 
         patience=patience,
-        learning_rate=learning_rate
+        learning_rate=learning_rate,
     )
     logging.info('--Model training complete--')

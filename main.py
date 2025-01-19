@@ -56,6 +56,9 @@ def main():
     parser.add_argument('--val_size', type=float, default=0.2, help='Val size for train test split')
     parser.add_argument('--random_state', type=int, default=42, help='Random state')
     parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention', 'cross_attention'], help='Method to fuse features: concat (default) or attention, cross_attention')
+    parser.add_argument('--loss', type=str, default='CrossEntropy', choice=['CrossEntropy', 'FocalLoss'], help='Loss for training')
+    parser.add_argument('--alpha_focal', nargs='+', type=float, default=None, help='alpha for focal loss')
+    parser.add_argument('--gamma_focal', type=int, default=2, help='gamma for focal loss')
     # parser.add_argument('--active_ocr', action='store_true', help='Enable combining OCR and text')
     
     args = parser.parse_args()
@@ -165,6 +168,9 @@ def main():
             learning_rate=args.learning_rate,
             val_size=args.val_size,
             random_state=args.random_state,
+            loss_func=args.loss,
+            alpha_focal=args.alpha_focal,
+            gamma_focal=args.gamma_focal
         )
    
     elif args.mode == 'test':
