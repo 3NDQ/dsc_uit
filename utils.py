@@ -129,10 +129,11 @@ class SelfAttention(nn.Module):
         return context_vec
 
 class CrossAttention(nn.Module):
-    def __init__(self, d_in, d_out_kq, d_out_v):
+    def __init__(self, d_in, d_out_kq, d_out_v, num_heads):
         super().__init__()
         self.d_out_kq = d_out_kq
         self.d_out_v = d_out_v
+        self.num_heads = num_heads
 
         self.W_query = nn.Linear(d_in, d_out_kq)
         self.W_key = nn.Linear(d_in, d_out_kq)
