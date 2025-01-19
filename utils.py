@@ -17,7 +17,6 @@ class WeightedFocalLoss(nn.Module):
 
         BCE_loss = F.nll_loss(inputs, targets, reduction=self.reduction)
         targets = targets.type(torch.long)
-        # at = self.alpha.gather(0, targets.data.view(-1))
         pt = torch.exp(-BCE_loss)
         F_loss = self.alpha[targets] * (1-pt) ** self.gamma * BCE_loss
         loss_weighted_manual = F_loss.sum() / self.alpha[targets].sum()
@@ -48,7 +47,6 @@ class FocalLoss(nn.Module):
             return focal_loss.sum()
         else:
             return focal_loss
-        
 class SelfAttention(nn.Module):
     def __init__(self, d_in, d_out_kq, d_out_v):
         super().__init__()
