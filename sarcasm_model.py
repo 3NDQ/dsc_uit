@@ -12,7 +12,6 @@ class VietnameseSarcasmClassifier(nn.Module):
                  class_weight=None,
                  fusion_method='concat',
                  num_labels=4,
-                 attention_heads=8,
                  dropout_rate=0.2,
                  gamma=2.0): 
         
@@ -25,16 +24,15 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.gamma = gamma  # Store gamma
         self.class_weight = class_weight
-        self.attention_heads = attention_heads
         self.dropout_rate = dropout_rate
         
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
-            self.text_to_image_attention = CrossAttention(d_in=1024, d_out_kq=2024, d_out_v=2024, num_heads=attention_heads)
-            self.image_to_text_attention = CrossAttention(d_in=2024, d_out_kq=1024, d_out_v=1024, num_heads=attention_heads)
+            self.text_to_image_attention = CrossAttention(d_in=1024, d_out_kq=2024, d_out_v=2024)
+            self.image_to_text_attention = CrossAttention(d_in=2024, d_out_kq=1024, d_out_v=1024)
             combined_size = 1024 + 2024
         elif self.fusion_method == 'attention':
-            self.self_attention = SelfAttention(d_in=1024 + 2024, d_out_kq=1024 + 2024, d_out_v=1024 + 2024, num_heads=attention_heads)
+            self.self_attention = SelfAttention(d_in=1024 + 2024, d_out_kq=1024 + 2024, d_out_v=1024 + 2024)
             combined_size = 1024 + 2024
         else:
             combined_size = 1024 + 2024
