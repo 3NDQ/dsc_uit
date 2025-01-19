@@ -28,8 +28,8 @@ class VietnameseSarcasmClassifier(nn.Module):
         
         # Define attention layers based on fusion method
         if self.fusion_method == 'cross_attention':
-            self.text_to_image_attention = CrossAttention(d_in=1024, d_out_kq=2024, d_out_v=2024)
-            self.image_to_text_attention = CrossAttention(d_in=2024, d_out_kq=1024, d_out_v=1024)
+            self.text_to_image_attention = CrossAttention(d_in=2024, d_out_kq=1024, d_out_v=1024)  # d_in should be 2024 for image_features
+            self.image_to_text_attention = CrossAttention(d_in=1024, d_out_kq=2024, d_out_v=2024)
             combined_size = 1024 + 2024
         elif self.fusion_method == 'attention':
             self.self_attention = SelfAttention(d_in=1024 + 2024, d_out_kq=1024 + 2024, d_out_v=1024 + 2024)
