@@ -41,12 +41,12 @@ class VietnameseSarcasmClassifier(nn.Module):
         if self.fusion_method == 'cross_attention':
             self.text_to_image_attention = CrossAttention(d_in_q=1024, d_in_kv=2024, d_out_kq=2024, d_out_v=2024)  # d_in for W_query should be 1024 (text_features)
             self.image_to_text_attention = CrossAttention(d_in_q=2024, d_in_kv=1024, d_out_kq=1024, d_out_v=1024)  # d_in for W_query should be 2024 (image_features)
-            combined_size = 1024 + 2024
+            combined_size = 2048
         elif self.fusion_method == 'attention':
-            self.self_attention = SelfAttention(d_in=1024 + 2024, d_out_kq=1024 + 2024, d_out_v=1024 + 2024)
-            combined_size = 1024 + 2024
+            self.self_attention = SelfAttention(d_in=3584, d_out_kq=2048, d_out_v=2048)
+            combined_size = 3584
         else:
-            combined_size = 1024 + 2024
+            combined_size = 3584
             
         self.fc = nn.Sequential(
             nn.Linear(512, 512 // 2),
