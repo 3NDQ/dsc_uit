@@ -149,7 +149,7 @@ def evaluate_model(model, dataloader, device, epoch):
     total_loss = 0
 
     with torch.no_grad():
-        for batch in tqdm(dataloader, desc=f"Evaluating Epoch {epoch}", leave=False):
+        for batch in tqdm(dataloader, desc=f"Evaluating Epoch {epoch + 1}", leave=False):
             batch = {k: v.to(device) for k, v in batch.items()}
             outputs = model(**batch)
 
@@ -166,7 +166,7 @@ def evaluate_model(model, dataloader, device, epoch):
     labels = ['multi-sarcasm', 'text-sarcasm', 'image-sarcasm', 'not-sarcasm']
 
     # Calculate and log metrics for each class
-    logging.info(f"\n----Epoch: {epoch} - Class-wise Metrics----")
+    logging.info(f"\n----EPOCH: {epoch + 1} - Class-wise Metrics----")
     for i, label in enumerate(labels):
         y_true = [1 if l == i else 0 for l in all_labels]
         y_pred = [1 if p == i else 0 for p in all_preds]
@@ -175,7 +175,7 @@ def evaluate_model(model, dataloader, device, epoch):
             y_true, y_pred, average='binary', zero_division=0
         )
 
-        logging.info(f"Epoch: {epoch} - {label}: precision: {precision:.4f}, recall: {recall:.4f}, f1 score: {f1:.4f}")
+        logging.info(f"Epoch: {epoch + 1} - {label}: precision: {precision:.4f}, recall: {recall:.4f}, f1 score: {f1:.4f}")
 
     # Calculate overall metrics
     overall_acc = accuracy_score(all_labels, all_preds)
@@ -184,8 +184,8 @@ def evaluate_model(model, dataloader, device, epoch):
     )
 
     # Log overall metrics
-    logging.info(f"\n----Epoch: {epoch} - OVERALL----")
+    logging.info(f"\n----EPOCH: {epoch + 1} - OVERALL----")
     average_loss = total_loss / len(dataloader) if len(dataloader) > 0 else 0
-    logging.info(f"Epoch: {epoch} - val Loss: {average_loss:.4f} | accuracy: {overall_acc:.4f} | precision: {overall_precision:.4f} | recall: {overall_recall:.4f} | f1 score: {overall_f1:.4f}")
+    logging.info(f"Epoch: {epoch + 1} - val Loss: {average_loss:.4f} | accuracy: {overall_acc:.4f} | precision: {overall_precision:.4f} | recall: {overall_recall:.4f} | f1 score: {overall_f1:.4f}")
 
     return overall_f1
