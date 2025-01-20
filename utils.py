@@ -131,12 +131,21 @@ def evaluate_model(model, dataloader, device):
 
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating", leave=False):
-            image_features, text_features, labels = batch 
-            image_features = image_features.to(device)
+            combined_image_features, text_features, ocr_features, image_features, labels = batch
+            combined_image_features = combined_image_features.to(device)
             text_features = text_features.to(device)
+            ocr_features = ocr_features.to(device)
+            image_features = image_features.to(device)
             labels = labels.to(device)
 
-            outputs = model(image_features=image_features, text_features=text_features, labels=labels) # Using pre-extracted features
+
+            outputs = model(
+                combined_image_features=combined_image_features,
+                text_features=text_features,
+                ocr_features=ocr_features,
+                image_features=image_features,
+                labels=labels
+            )
             loss, logits = outputs
 
             total_loss += loss.item()
