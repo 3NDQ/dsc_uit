@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 def visualize_attention(image, attention_weights):
     """Hiển thị attention map trên ảnh."""
     h, w, _ = image.shape
-    num_patches_sqrt = int(np.sqrt(attention_weights.shape[-1])) # Tính căn bậc hai
+    num_patches_sqrt = int(np.sqrt(attention_weights.shape[-1]))
     attention_map = attention_weights.reshape(num_patches_sqrt, num_patches_sqrt)
     attention_map = cv2.resize(attention_map, (w, h))
     attention_map = (attention_map - attention_map.min()) / (attention_map.max() - attention_map.min())
@@ -22,7 +22,7 @@ def visualize_attention(image, attention_weights):
     plt.imshow(overlayed_image)
     plt.title("Attention Map")
     plt.show()
-    
+
 def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_dir, mode="train", image_model_name="google/vit-base-patch16-224", text_model_name="jinaai/jina-embeddings-v3", visualize_attention_flag=False):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     image_processor = AutoImageProcessor.from_pretrained(image_model_name, use_fast=True)
@@ -97,11 +97,9 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
     image_combined_features = []
     image_only_features = []
     image_ocr_features = []
-    total_images = len(images)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     input_json_file_path = ocr_cache_path
-
     if os.path.exists(input_json_file_path):
         with open(input_json_file_path, 'r', encoding='utf-8') as f:
             json_data = json.load(f)
@@ -115,7 +113,7 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
     else:
         raise FileNotFoundError(f"JSON file not found at {input_json_file_path}")
 
-    for i, image_name in enumerate(images, 1):
+    for image_name in images:
         try:
             image_path = os.path.join(image_folder, image_name)
             img = cv2.imread(image_path)
@@ -126,7 +124,9 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
             if visualize:
                 with torch.no_grad():
                     outputs = image_encoder(**inputs)
+                print(f"Structure of outputs: {outputs}")
                 attentions = outputs.attentions[-1].squeeze().mean(0).cpu().numpy()
+                print(f"Shape of attentions: {attentions.shape}")
                 visualize_attention(img, attentions)
 
             with torch.no_grad():
@@ -148,10 +148,8 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
                     truncation=True,
                     max_length=512
                 ).to(device)
-
                 with torch.no_grad():
                     ocr_outputs = text_encoder(**text_inputs)
-
                 ocr_features = ocr_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
                 combined_features = np.concatenate([image_features, ocr_features])
                 image_ocr_features.append(ocr_features)
