@@ -26,9 +26,9 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.label_smoothing = label_smoothing 
         
         self.dropout = nn.Dropout(dropout_rate)
-        image_feature_size = 1024  
+        image_feature_size = 1000  
         text_feature_size = 1024
-        ocr_feature_size = 1000
+        ocr_feature_size = 1024
         combined_feature_size = 2024
         
         self.image_dense1 = nn.Linear(image_feature_size, 1024)
