@@ -1,32 +1,19 @@
-# extract_features.py
 import numpy as np
 import json
 import os
-from transformers import AutoImageProcessor, AutoModel, AutoTokenizer, AutoModelForImageClassification
+from transformers import AutoImageProcessor, AutoModelForImageClassification, AutoTokenizer, AutoModel
 import cv2
 import pandas as pd
 import torch
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 import argparse
-import matplotlib.pyplot as plt
 
-def visualize_attention(image, attention_weights):
-    """Hiển thị attention map trên ảnh."""
-    h, w, _ = image.shape
-    num_patches_sqrt = int(np.sqrt(attention_weights.shape[-1] - 1))  # Subtract 1 for the class token
-    attention_map = attention_weights[:, 1:].reshape(num_patches_sqrt, num_patches_sqrt) # Remove Class Token and reshape
-    attention_map = cv2.resize(attention_map, (w, h))
-    attention_map = (attention_map - attention_map.min()) / (attention_map.max() - attention_map.min())
-    heatmap = plt.cm.viridis(attention_map)[:, :, :3]
-    overlayed_image = (0.6 * image + 0.4 * heatmap * 255).astype(np.uint8)
-    plt.imshow(overlayed_image)
-    plt.title("Attention Map")
-    plt.show()
-    
-def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_dir, mode="train", image_model_name="google/vit-base-patch16-224", text_model_name="jinaai/jina-embeddings-v3", visualize_attention_flag=False):
+def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_dir, mode="train", image_model_name="google/vit-base-patch16-224", text_model_name="jinaai/jina-embeddings-v3"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     image_processor = AutoImageProcessor.from_pretrained(image_model_name, use_fast=True)
-    image_encoder = AutoModelForImageClassification.from_pretrained(image_model_name, output_attentions=True).to(device).to(torch.float32)
+    image_encoder = AutoModelForImageClassification.from_pretrained(image_model_name).to(device).to(torch.float32)
     if text_model_name == "jinaai/jina-embeddings-v3":
         text_tokenizer = AutoTokenizer.from_pretrained(text_model_name, trust_remote_code=True, use_flash_attn=False)
         text_encoder = AutoModel.from_pretrained(text_model_name, trust_remote_code=True, use_flash_attn=False).to(device).to(torch.float32)
@@ -38,6 +25,7 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
     print(f'Text Encoder Hidden Size: {text_encoder.config.hidden_size}')
     print(f'Combined Feature Size: {image_encoder.config.hidden_size + text_encoder.config.hidden_size}')
 
+    # Load data from JSON
     with open(data_path, "r", encoding="utf-8") as f:
         data = json.load(f)
     all_ocr_features = []
@@ -47,8 +35,8 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
     all_labels = []
 
     for item_id, item in tqdm(data.items(), desc=f"Extracting features for {mode} data"):
-        image_only_features, image_ocr_features, image_features, text_features = preprocess_data(
-            [item["image"]],
+        image_only_features, image_ocr_features, image_features, text_features, attention_weights = preprocess_data(
+            [item["image"]], 
             [item["caption"]],
             image_processor,
             image_encoder,
@@ -56,20 +44,19 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
             text_encoder,
             image_folder,
             ocr_cache_path,
-            mode,
-            visualize=visualize_attention_flag
+            mode
         )
-
+        
         all_image_features.append(image_features)
         all_text_features.append(text_features)
         all_ocr_features.append(image_ocr_features)
         all_image_only_features.append(image_only_features)
-
+        
         if mode == "train":
             label_to_id = {
-                'multi-sarcasm': 0,
-                'text-sarcasm': 1,
-                'image-sarcasm': 2,
+                'multi-sarcasm': 0, 
+                'text-sarcasm': 1, 
+                'image-sarcasm': 2, 
                 'not-sarcasm': 3,
             }
             all_labels.append({
@@ -81,25 +68,32 @@ def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_di
             all_labels.append({
                 "item_id": item_id
             })
+            
+        # Visualize attention map for each image
+        visualize_attention_map(attention_weights, item["image"])
 
+    # Save features and labels (or identifiers for test mode)
     os.makedirs(output_dir, exist_ok=True)
     np.save(os.path.join(output_dir, "combined_image_features.npy"), np.array(all_image_features))
     np.save(os.path.join(output_dir, "text_features.npy"), np.array(all_text_features))
     np.save(os.path.join(output_dir, "ocr_features.npy"), np.array(all_ocr_features))
     np.save(os.path.join(output_dir, "image_features.npy"), np.array(all_image_only_features))
-
+    
     with open(os.path.join(output_dir, "labels.json"), "w", encoding="utf-8") as f:
         json.dump(all_labels, f, indent=2)
 
     print(f"Features saved to {output_dir}")
 
-def preprocess_data(images, texts, image_processor, image_encoder, text_tokenizer, text_encoder, image_folder, ocr_cache_path, mode='train', visualize=False):
+def preprocess_data(images, texts, image_processor, image_encoder, text_tokenizer, text_encoder, image_folder, ocr_cache_path, mode='train'):
     image_combined_features = []
     image_only_features = []
     image_ocr_features = []
+    attention_weights_list = []
+    total_images = len(images)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     input_json_file_path = ocr_cache_path
+
     if os.path.exists(input_json_file_path):
         with open(input_json_file_path, 'r', encoding='utf-8') as f:
             json_data = json.load(f)
@@ -113,26 +107,19 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
     else:
         raise FileNotFoundError(f"JSON file not found at {input_json_file_path}")
 
-    for image_name in images:
+    for i, image_name in enumerate(images, 1):
         try:
             image_path = os.path.join(image_folder, image_name)
             img = cv2.imread(image_path)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
             inputs = image_processor(images=img, return_tensors="pt").to(device)
-
-            if visualize:
-                with torch.no_grad():
-                    outputs = image_encoder(**inputs)
-                attentions = outputs.attentions[-1].squeeze().mean(0).cpu().numpy()
-                visualize_attention(img, attentions)
-
             with torch.no_grad():
-                image_outputs = image_encoder(**inputs)
-
+                image_outputs = image_encoder(**inputs, output_attentions=True)  # Lấy attention weights
             image_features = image_outputs.logits.cpu().numpy().squeeze()
-            image_only_features.append(image_features)
+            attention_weights = image_outputs.attentions  # Attention weights của từng lớp
+            attention_weights_list.append(attention_weights)  # Lưu lại để sử dụng sau
 
+            image_only_features.append(image_features)
             if image_name in existing_images:
                 combined_text = df[df["image_path"] == image_name]["ocr_text"].values[0]
             else:
@@ -141,43 +128,67 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
             if combined_text.strip():
                 text_inputs = text_tokenizer(
                     combined_text,
-                    return_tensors="pt",
+                    return_tensors="pt", 
                     padding="longest",
-                    truncation=True,
+                    truncation=True, 
                     max_length=512
                 ).to(device)
+
                 with torch.no_grad():
                     ocr_outputs = text_encoder(**text_inputs)
+
                 ocr_features = ocr_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
                 combined_features = np.concatenate([image_features, ocr_features])
                 image_ocr_features.append(ocr_features)
             else:
                 combined_features = np.concatenate([image_features, np.zeros(text_encoder.config.hidden_size)])
                 image_ocr_features.append(np.zeros(text_encoder.config.hidden_size))
-
+                
             image_combined_features.append(combined_features)
         except Exception as e:
             print(f"\nError processing image {image_name}: {str(e)}")
             image_combined_features.append(np.zeros(image_encoder.config.hidden_size + text_encoder.config.hidden_size))
 
     text_features = []
-    for text in texts:
+    total_texts = len(texts)
+    for i, text in enumerate(texts, 1):
         try:
             inputs = text_tokenizer(
-                text,
-                return_tensors="pt",
+                text, 
+                return_tensors="pt", 
                 padding="longest",
-                truncation=True,
+                truncation=True, 
                 max_length=512
             ).to(device)
+
             with torch.no_grad():
                 text_outputs = text_encoder(**inputs)
-            text_features.append(text_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy())
+
+            text_feature = text_outputs.last_hidden_state.mean(dim=1).squeeze().cpu().numpy()
+            text_features.append(text_feature)
+
         except Exception as e:
             print(f"\nError processing text: {str(e)}")
             text_features.append(np.zeros(text_encoder.config.hidden_size))
 
-    return np.array(image_only_features), np.array(image_ocr_features), np.array(image_combined_features), np.array(text_features)
+    return np.array(image_only_features), np.array(image_ocr_features), np.array(image_combined_features), np.array(text_features), attention_weights_list
+
+# Hàm để vẽ heatmap từ attention weights
+def visualize_attention_map(attention_weights, image_path):
+    # Chọn một layer attention (ví dụ layer đầu tiên)
+    layer_attention = attention_weights[0]  # Chọn lớp attention đầu tiên
+    # Giả sử bạn có attention từ các đầu (heads) trong lớp đó, bạn có thể chọn một trong chúng
+    attention_map = layer_attention[0].detach().cpu().numpy()  # attention map cho một head
+
+    # Normalize heatmap
+    attention_map = attention_map - attention_map.min()
+    attention_map = attention_map / attention_map.max()
+
+    # Vẽ heatmap
+    plt.imshow(attention_map, cmap='viridis', interpolation='nearest')
+    plt.colorbar()
+    plt.title(f"Attention Map for {image_path}")
+    plt.show()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract features from image and text data.")
@@ -188,7 +199,6 @@ if __name__ == "__main__":
     parser.add_argument("--mode", default="train", choices=["train", "test"], help="Mode: 'train' or 'test'.")
     parser.add_argument("--image_model_name", default="google/vit-base-patch16-224", help="Name of the image model to use.")
     parser.add_argument("--text_model_name", default="jinaai/jina-embeddings-v3", help="Name of the text model to use.")
-    parser.add_argument("--visualize_attention", action="store_true", help="Visualize attention maps.")
 
     args = parser.parse_args()
 
@@ -199,6 +209,5 @@ if __name__ == "__main__":
         output_dir=args.output_dir,
         mode=args.mode,
         image_model_name=args.image_model_name,
-        text_model_name=args.text_model_name,
-        visualize_attention_flag=args.visualize_attention
+        text_model_name=args.text_model_name
     )
