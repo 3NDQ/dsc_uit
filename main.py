@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--train_features_dir', type=str, default='train_features', help='Directory containing pre-extracted training features')
     parser.add_argument('--train_features_dir2', type=str, default='train_features', help='Second directory containing pre-extracted training features')
     parser.add_argument('--test_features_dir', type=str, default='test_features', help='Directory containing pre-extracted testing features')
+    parser.add_argument('--test_features_dir2', type=str, default='test_features', help='Second directory containing pre-extracted testing features')
 
     # Model paths for testing
     parser.add_argument('--model_paths', type=str, nargs='+', default=['model_epoch_1.pth'], help='Paths to trained models')
