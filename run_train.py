@@ -193,7 +193,7 @@ def run_train(train_features_dir, train_features_dir2, device, num_epochs, patie
         fusion_method=fusion_method,
         class_weight=class_weights_tensor,
         gamma=gamma,
-        loss_type='cross_entropy',
+        loss_type=loss_type,
         label_smoothing=label_smoothing
     ).to(device)
     logging.info('Model initialized and moved to device')
