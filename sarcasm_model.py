@@ -67,9 +67,9 @@ class VietnameseSarcasmClassifier(nn.Module):
 
     def forward(self,
                 combined_image_features,
-                image_features,
-                ocr_features,
                 text_features,
+                ocr_features,
+                image_features,
                 labels=None):
         
         image_out = self.image_dense1(combined_image_features)
