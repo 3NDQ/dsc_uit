@@ -131,25 +131,45 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     train_image_features = np.squeeze(np.array(train_image_features))
 
     # Split data into training and validation sets
-    train_img_feats, val_img_feats, train_text_feats, val_text_feats, train_labels, val_labels = train_test_split(
-        train_combined_image_features, train_text_features, train_ocr_features, train_image_features, train_labels,
-        test_size=val_size, stratify=train_labels, random_state=random_state
+    (
+        train_combined_image_features,
+        val_combined_image_features,
+        train_text_features,
+        val_text_features,
+        train_ocr_features,
+        val_ocr_features,
+        train_image_features,
+        val_image_features,
+        train_labels,
+        val_labels,
+    ) = train_test_split(
+        train_combined_image_features,
+        train_text_features,
+        train_ocr_features,
+        train_image_features,
+        train_labels,
+        test_size=val_size,
+        stratify=train_labels,
+        random_state=random_state,
     )
-    logging.info('Finished splitting train/dev indices and features')
+    logging.info("Finished splitting train/dev indices and features")
 
     # Create TensorDatasets
     train_dataset = TensorDataset(
-        torch.tensor(train_img_feats, dtype=torch.float),
-        torch.tensor(train_text_feats, dtype=torch.float),
-        torch.tensor(train_labels, dtype=torch.long)
+        torch.tensor(train_combined_image_features, dtype=torch.float),
+        torch.tensor(train_text_features, dtype=torch.float),
+        torch.tensor(train_ocr_features, dtype=torch.float),
+        torch.tensor(train_image_features, dtype=torch.float),
+        torch.tensor(train_labels, dtype=torch.long),
     )
     val_dataset = TensorDataset(
-        torch.tensor(val_img_feats, dtype=torch.float),
-        torch.tensor(val_text_feats, dtype=torch.float),
-        torch.tensor(val_labels, dtype=torch.long)
+        torch.tensor(val_combined_image_features, dtype=torch.float),
+        torch.tensor(val_text_features, dtype=torch.float),
+        torch.tensor(val_ocr_features, dtype=torch.float),
+        torch.tensor(val_image_features, dtype=torch.float),
+        torch.tensor(val_labels, dtype=torch.long),
     )
-    logging.info('Finished creating train/dev datasets')
-
+    logging.info("Finished creating train/dev datasets")
     # Create DataLoaders
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
