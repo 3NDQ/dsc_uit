@@ -79,7 +79,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                 image_features,
                 text_features,
                 labels=None):
-        print(f'Shape: {image_features.shape}')
+        logging.info(f'Shape: {image_features.shape}')
         image_out = self.image_dense1(image_features)
         image_out = nn.GELU()(image_out)
         image_out = self.dropout(image_out)
