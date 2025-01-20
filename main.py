@@ -71,7 +71,7 @@ def main():
     elif args.mode == 'test':
         run_test(
             test_features_dir=args.test_features_dir,
-            train_features_dir2=args.train_features_dir2,
+            test_features_dir2=args.test_features_dir2,
             device=device,
             batch_size=args.batch_size,
             num_workers=args.num_workers,
