@@ -1,35 +1,39 @@
+!python extract_features.py \
+    --data_path "/kaggle/input/vimmsd/vimmsd-train.json" \
+    --image_folder "/kaggle/input/vimmsd/train-images" \
+    --ocr_cache_path "/kaggle/input/ocr-cache/paddle_train_ocr_cache.json" \
+    --image_model_name "google/vit-base-patch16-224" \
+    --text_model_name "jinaai/jina-embeddings-v3"\
+    --output_dir "train_features" \
+    --mode "train"
+    
 !CUDA_LAUNCH_BLOCKING=1 python main.py \
     --mode train \
-    --text_encoder "vinai/phobert-base" \
-    --image_encoder "google/vit-base-patch16-224" \
-    --tokenizer "vinai/phobert-base" \
-    --train_json "/kaggle/input/vimmsd-training-dataset/vimmsd-train.json" \
-    --train_image_folder "/kaggle/input/vimmsd-training-dataset/training-images/train-images" \
-    --num_epochs 10 \
-    --patience 5 \
-    --batch_size 8 \
-    --learning_rate 2e-5 \
+    --train_features_dir "/kaggle/input/features-vit-jina-embedding-v3/train_features" \
+    --batch_size 32 \
+    --num_workers 4 \
+    --fusion_method "concat" \
+    --num_epochs 35 \
+    --patience 10 \
+    --learning_rate 3e-5 \
     --val_size 0.2 \
     --random_state 42 \
-    --num_workers 4 \
-    --fusion_method 'concat' \
-    --use_train_ocr_cache \
-    --train_ocr_cache_path "train_ocr_cache.json"
+    --loss_type 'focal' \
+    --label_smoothing 0
 
+!python extract_features.py \
+    --data_path "/kaggle/input/vimmsd/vimmsd-private-test.json" \
+    --image_folder "/kaggle/input/vimmsd/test-images" \
+    --ocr_cache_path "/kaggle/input/ocr-cache/paddle_test_ocr_cache.json" \
+    --image_model_name "google/vit-base-patch16-224" \
+    --text_model_name "jinaai/jina-embeddings-v3" \
+    --output_dir "test_features" \
+    --mode "test"
 
-
-!CUDA_LAUNCH_BLOCKING=1 python main.py \
+!python main.py \
     --mode test \
-    --text_encoder "vinai/phobert-base" \
-    --image_encoder "google/vit-base-patch16-224" \
-    --tokenizer "vinai/phobert-base" \
-    --test_json "/kaggle/input/vimmsd-training-dataset/vimmsd-public-test.json" \
-    --test_image_folder "/kaggle/input/vimmsd-public-test/public-test-images/dev-images" \
-    --model_path "model_epoch_1.pth" \
-    --batch_size 8 \
+    --test_features_dir "/kaggle/input/features-vit-jina-embedding-v3/test_features" \
+    --batch_size 16 \
     --num_workers 4 \
-    --fusion_method 'concat' \
-    --use_test_ocr_cache \
-    --test_ocr_cache_path "test_ocr_cache.json"
-
-
+    --model_paths "model_epoch_26.pth" "model_epoch_29.pth" "model_epoch_3.pth"\
+    --fusion_method "concat"

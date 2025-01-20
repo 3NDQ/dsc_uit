@@ -1,3 +1,6 @@
 .zip
 datasets
 .python-version
+__pycache__
+.venv
+data/
