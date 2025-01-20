@@ -174,20 +174,21 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
     return np.array(image_only_features), np.array(image_ocr_features), np.array(image_combined_features), np.array(text_features), attention_weights_list
 
 # Hàm để vẽ heatmap từ attention weights
-def visualize_attention_map(attention_weights, image_path):
-    # Chọn một layer attention (ví dụ layer đầu tiên)
-    layer_attention = attention_weights[0]  # Chọn lớp attention đầu tiên
-    # Giả sử bạn có attention từ các đầu (heads) trong lớp đó, bạn có thể chọn một trong chúng
-    attention_map = layer_attention[0].detach().cpu().numpy()  # attention map cho một head
+def visualize_attention_map(attention_weights, image_name):
+    # attention_weights có shape (1, num_heads, height, width)
+    # Lấy một head để trực quan hóa
+    attention_map = attention_weights[0, 0].cpu().detach().numpy()  # Giả sử lấy head đầu tiên
 
-    # Normalize heatmap
-    attention_map = attention_map - attention_map.min()
-    attention_map = attention_map / attention_map.max()
+    # Kiểm tra và chuyển đổi chiều nếu cần
+    if len(attention_map.shape) == 2:
+        attention_map = attention_map  # Nếu là 2D rồi thì giữ nguyên
+    elif len(attention_map.shape) == 3:
+        attention_map = attention_map[0]  # Nếu có thêm chiều, chọn một slice
 
-    # Vẽ heatmap
+    # Vẽ attention map
     plt.imshow(attention_map, cmap='viridis', interpolation='nearest')
-    plt.colorbar()
-    plt.title(f"Attention Map for {image_path}")
+    plt.axis('off')  # Tắt trục nếu không cần
+    plt.title(f"Attention Map for {image_name}")
     plt.show()
 
 if __name__ == "__main__":
