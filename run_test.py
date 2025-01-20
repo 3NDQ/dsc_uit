@@ -56,7 +56,10 @@ def run_test(test_features_dir, device, batch_size, num_workers, model_paths, fu
     )
 
     # Create DataLoader
-    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    test_dataloader = DataLoader(test_dataset,
+                                 batch_size=batch_size,
+                                 shuffle=False,
+                                 num_workers=num_workers)
     logging.info('Finished loading Test DataLoader')
 
     # Initialize model
