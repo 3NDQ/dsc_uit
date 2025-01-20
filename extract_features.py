@@ -175,11 +175,11 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
 
 # Hàm để vẽ heatmap từ attention weights
 def visualize_attention_map(attention_weights, image_name):
-    # Kiểm tra nếu attention_weights là một danh sách
-    if isinstance(attention_weights, list):
-        attention_weights = attention_weights[0]  # Lấy phần tử đầu tiên từ danh sách
-    
-    # attention_weights giờ đây là một tensor với shape (1, num_heads, height, width)
+    # Kiểm tra nếu attention_weights là một tuple hoặc danh sách
+    if isinstance(attention_weights, tuple):
+        attention_weights = attention_weights[0]  # Lấy phần tử đầu tiên trong tuple
+
+    # Đảm bảo attention_weights là một tensor với shape (1, num_heads, height, width)
     attention_map = attention_weights[0, 0].cpu().detach().numpy()  # Lấy head đầu tiên
 
     # Kiểm tra và chuyển đổi chiều nếu cần
