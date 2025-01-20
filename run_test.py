@@ -14,15 +14,17 @@ def test_model(model, device, dataloader):
     
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Testing", leave=False):
-            combined_image_features, text_features, ocr_features, image_features = batch
+            combined_image_features, text_features, text_features2, ocr_features, image_features = batch
             combined_image_features = combined_image_features.to(device)
             text_features = text_features.to(device)
+            text_features2 = text_features2.to(device)
             ocr_features = ocr_features.to(device)
             image_features = image_features.to(device)
             
             outputs = model(
                 combined_image_features=combined_image_features,
                 text_features=text_features,
+                text_features2=text_features2,
                 ocr_features=ocr_features,
                 image_features=image_features,
             )
@@ -32,25 +34,28 @@ def test_model(model, device, dataloader):
 
     return predictions
 
-def run_test(test_features_dir, device, batch_size, num_workers, model_paths, fusion_method):
+def run_test(test_features_dir, test_features_dir2, device, batch_size, num_workers, model_paths, fusion_method):
     logging.info("Starting testing with multiple models...")
 
     # Load pre-extracted features
     test_combined_image_features = np.load(os.path.join(test_features_dir, "combined_image_features.npy"))
     test_text_features = np.load(os.path.join(test_features_dir, "text_features.npy"))
+    test_text_features2 = np.load(os.path.join(test_features_dir2, "text_features.npy"))
     test_ocr_features = np.load(os.path.join(test_features_dir, "ocr_features.npy"))
     test_image_features = np.load(os.path.join(test_features_dir, "image_features.npy"))
 
     # Convert to a single NumPy array
     test_combined_image_features = np.squeeze(np.array(test_combined_image_features))
     test_text_features = np.squeeze(np.array(test_text_features))
+    test_text_features2 = np.squeeze(np.array(test_text_features2))
     test_ocr_features = np.squeeze(np.array(test_ocr_features))
     test_image_features = np.squeeze(np.array(test_image_features))
-    
+
     # Create a TensorDataset
     test_dataset = TensorDataset(
         torch.tensor(test_combined_image_features, dtype=torch.float),
         torch.tensor(test_text_features, dtype=torch.float),
+        torch.tensor(test_text_features2, dtype=torch.float),
         torch.tensor(test_ocr_features, dtype=torch.float),
         torch.tensor(test_image_features, dtype=torch.float),
     )

@@ -34,9 +34,10 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         train_progress = tqdm(train_dataloader, desc=f"Training Epoch {epoch+1}/{num_epochs}", leave=False)
 
         for batch in train_progress:
-            combined_image_features, text_features, ocr_features, image_features, labels = batch
+            combined_image_features, text_features, text_features2, ocr_features, image_features, labels = batch
             combined_image_features = combined_image_features.to(device)
             text_features = text_features.to(device)
+            text_features2 = text_features2.to(device)
             ocr_features = ocr_features.to(device)
             image_features = image_features.to(device)
             labels = labels.to(device)
@@ -49,6 +50,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
                 outputs = model(
                     combined_image_features=combined_image_features,
                     text_features=text_features,
+                    text_features2= text_features2,
                     ocr_features=ocr_features,
                     image_features=image_features,
                     labels=labels
@@ -97,7 +99,7 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
 
     return model
 
-def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_workers,
+def run_train(train_features_dir, train_features_dir2, device, num_epochs, patience, batch_size, num_workers,
               learning_rate, val_size, random_state, fusion_method, gamma,
               loss_type, label_smoothing):
     logging.info("Starting training and evaluation...")
@@ -105,9 +107,9 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     # Load pre-extracted features
     train_combined_image_features = np.load(os.path.join(train_features_dir, "combined_image_features.npy"))
     train_text_features = np.load(os.path.join(train_features_dir, "text_features.npy"))
+    train_text_features2 = np.load(os.path.join(train_features_dir2, "text_features.npy"))
     train_ocr_features = np.load(os.path.join(train_features_dir, "ocr_features.npy"))
     train_image_features = np.load(os.path.join(train_features_dir, "image_features.npy"))
-
     # Load labels
     with open(os.path.join(train_features_dir, "labels.json"), "r") as f:
         train_labels_data = json.load(f)
@@ -130,6 +132,7 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     # Convert to single NumPy array
     train_combined_image_features = np.squeeze(np.array(train_combined_image_features))
     train_text_features = np.squeeze(np.array(train_text_features))
+    train_text_features2 = np.squeeze(np.array(train_text_features2))
     train_ocr_features = np.squeeze(np.array(train_ocr_features))
     train_image_features = np.squeeze(np.array(train_image_features))
 
@@ -139,6 +142,8 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
         val_combined_image_features,
         train_text_features,
         val_text_features,
+        train_text_features2,
+        val_text_features2,
         train_ocr_features,
         val_ocr_features,
         train_image_features,
@@ -148,6 +153,7 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     ) = train_test_split(
         train_combined_image_features,
         train_text_features,
+        train_text_features2.
         train_ocr_features,
         train_image_features,
         train_labels,
@@ -161,6 +167,7 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     train_dataset = TensorDataset(
         torch.tensor(train_combined_image_features, dtype=torch.float),
         torch.tensor(train_text_features, dtype=torch.float),
+        torch.tensor(train_text_features2, dtype=torch.float),
         torch.tensor(train_ocr_features, dtype=torch.float),
         torch.tensor(train_image_features, dtype=torch.float),
         torch.tensor(train_labels, dtype=torch.long),
@@ -168,6 +175,7 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
     val_dataset = TensorDataset(
         torch.tensor(val_combined_image_features, dtype=torch.float),
         torch.tensor(val_text_features, dtype=torch.float),
+        torch.tensor(val_text_features2, dtype=torch.float),
         torch.tensor(val_ocr_features, dtype=torch.float),
         torch.tensor(val_image_features, dtype=torch.float),
         torch.tensor(val_labels, dtype=torch.long),

@@ -30,7 +30,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_feature_size = 1024
         ocr_feature_size = 1024
         combined_feature_size = 2024
-        
+        text_feature2_size = 0
         self.image_dense1 = nn.Linear(image_feature_size, 1024)
         self.image_dense2 = nn.Linear(1024, 512)
 
@@ -78,6 +78,7 @@ class VietnameseSarcasmClassifier(nn.Module):
                 ocr_features,
                 image_features,
                 text_features,
+                text_features2,
                 labels=None):
         image_out = self.image_dense1(image_features)
         image_out = nn.GELU()(image_out)

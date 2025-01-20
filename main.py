@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--mode', type=str, choices=['train', 'test'], required=True, help='Mode: train or test')
     # Paths to pre-extracted features
     parser.add_argument('--train_features_dir', type=str, default='train_features', help='Directory containing pre-extracted training features')
+    parser.add_argument('--train_features_dir2', type=str, default='train_features', help='Second directory containing pre-extracted training features')
     parser.add_argument('--test_features_dir', type=str, default='test_features', help='Directory containing pre-extracted testing features')
 
     # Model paths for testing
@@ -53,6 +54,7 @@ def main():
     if args.mode == 'train':
         run_train(
             train_features_dir=args.train_features_dir,
+            train_features_dir2=args.train_features_dir2,
             device=device,
             batch_size=args.batch_size,
             num_workers=args.num_workers,
@@ -69,6 +71,7 @@ def main():
     elif args.mode == 'test':
         run_test(
             test_features_dir=args.test_features_dir,
+            train_features_dir2=args.train_features_dir2,
             device=device,
             batch_size=args.batch_size,
             num_workers=args.num_workers,
