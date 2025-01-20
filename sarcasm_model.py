@@ -43,7 +43,7 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.text_dense1 = nn.Linear(text_feature_size, 512)
         self.text_dense3 = nn.Linear(512, 256)
 
-        self.text_dense2 = nn.Linear(text_feature_size, 512)
+        self.text_dense2 = nn.Linear(text_feature2_size, 512)
         self.text_dense4 = nn.Linear(512, 256)
 
         self.text_dense5 = nn.Linear(text_feature_size + 256 + 256, 512)
@@ -109,10 +109,9 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_out1 = nn.GELU()(text_out1)
         text_out1 = self.dropout(text_out1)
         
-        text_out2 = self.text_dense2(text_features)
+        text_out2 = self.text_dense2(text_features2)
         text_out2 = nn.GELU()(text_out2)
         text_out2 = self.dropout(text_out2)
-        
         text_out2 = self.text_dense4(text_out2)
         text_out2 = nn.GELU()(text_out2)
         text_out2 = self.dropout(text_out2)
