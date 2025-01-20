@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 def visualize_attention(image, attention_weights):
     """Hiển thị attention map trên ảnh."""
     h, w, _ = image.shape
-    num_patches_sqrt = int(np.sqrt(attention_weights.shape[-1]))
-    attention_map = attention_weights.reshape(num_patches_sqrt, num_patches_sqrt)
+    num_patches_sqrt = int(np.sqrt(attention_weights.shape[-1] - 1))  # Subtract 1 for the class token
+    attention_map = attention_weights[:, 1:].reshape(num_patches_sqrt, num_patches_sqrt) # Remove Class Token and reshape
     attention_map = cv2.resize(attention_map, (w, h))
     attention_map = (attention_map - attention_map.min()) / (attention_map.max() - attention_map.min())
     heatmap = plt.cm.viridis(attention_map)[:, :, :3]
@@ -22,7 +22,7 @@ def visualize_attention(image, attention_weights):
     plt.imshow(overlayed_image)
     plt.title("Attention Map")
     plt.show()
-
+    
 def extract_and_save_features(data_path, image_folder, ocr_cache_path, output_dir, mode="train", image_model_name="google/vit-base-patch16-224", text_model_name="jinaai/jina-embeddings-v3", visualize_attention_flag=False):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     image_processor = AutoImageProcessor.from_pretrained(image_model_name, use_fast=True)
@@ -124,9 +124,7 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
             if visualize:
                 with torch.no_grad():
                     outputs = image_encoder(**inputs)
-                print(f"Structure of outputs: {outputs}")
                 attentions = outputs.attentions[-1].squeeze().mean(0).cpu().numpy()
-                print(f"Shape of attentions: {attentions.shape}")
                 visualize_attention(img, attentions)
 
             with torch.no_grad():
