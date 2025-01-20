@@ -26,19 +26,11 @@ class VietnameseSarcasmClassifier(nn.Module):
         self.label_smoothing = label_smoothing 
         
         self.dropout = nn.Dropout(dropout_rate)
-        image_feature_size = 1024  
+        image_feature_size = 2024  
         text_feature_size = 1024
-        ocr_feature_size = 1000
-        combined_feature_size = 2024
-        
+
         self.image_dense1 = nn.Linear(image_feature_size, 1024)
         self.image_dense2 = nn.Linear(1024, 512)
-
-        self.ocr_dense1 = nn.Linear(ocr_feature_size, 1024)
-        self.ocr_dense2 = nn.Linear(1024, 512)
-
-        self.image_dense3 = nn.Linear(image_feature_size + 512 + 512, 1024)
-        self.image_dense4 = nn.Linear(1024, 512)
 
         self.text_dense1 = nn.Linear(text_feature_size, 512)
         self.text_dense3 = nn.Linear(512, 256)
@@ -80,31 +72,18 @@ class VietnameseSarcasmClassifier(nn.Module):
                 text_features,
                 labels=None):
         
-        image_out = self.image_dense1(image_features)
+        image_out = self.image_dense1(combined_image_features)
         image_out = nn.GELU()(image_out)
         image_out = self.dropout(image_out)
+        
         image_out = self.image_dense2(image_out)
         image_out = nn.GELU()(image_out)
         image_out = self.dropout(image_out)
         
-        ocr_out = self.ocr_dense1(ocr_features)
-        ocr_out = nn.GELU()(ocr_out)
-        ocr_out = self.dropout(ocr_out)
-        ocr_out = self.ocr_dense2(ocr_features)
-        ocr_out = nn.GELU()(ocr_out)
-        ocr_out = self.dropout(ocr_out)
-        
-        image_out_combined = torch.cat((image_out, ocr_out, image_features), dim=1)
-        image_out_combined = self.image_dense3(image_out_combined)
-        image_out_combined = nn.GELU()(image_out_combined)
-        image_out_combined = self.dropout(image_out_combined)
-        image_out_combined = self.image_dense4(image_out_combined)
-        image_out_combined = nn.GELU()(image_out_combined)
-        image_out_combined = self.dropout(image_out_combined)
-        
         text_out1 = self.text_dense1(text_features)
         text_out1 = nn.GELU()(text_out1)
         text_out1 = self.dropout(text_out1)
+        
         text_out1 = self.text_dense3(text_out1)
         text_out1 = nn.GELU()(text_out1)
         text_out1 = self.dropout(text_out1)
@@ -123,14 +102,14 @@ class VietnameseSarcasmClassifier(nn.Module):
         text_out_combined = self.dropout(text_out_combined)
         
         if self.fusion_method == 'cross_attention':
-            attended_text = self.text_to_image_attention(text_out_combined, image_out_combined)
-            attended_image = self.image_to_text_attention(image_out_combined, text_out_combined)
+            attended_text = self.text_to_image_attention(text_out_combined, image_out)
+            attended_image = self.image_to_text_attention(image_out, text_out_combined)
             combined_features = torch.cat((attended_text, attended_image), dim=1)
         elif self.fusion_method == 'attention':
-            combined_features = torch.cat((image_out_combined, text_out_combined), dim=1)
+            combined_features = torch.cat((image_out, text_out_combined), dim=1)
             combined_features = self.self_attention(combined_features)
         else:
-            combined_features = torch.cat((image_out_combined, text_out_combined), dim=1)
+            combined_features = torch.cat((image_out, text_out_combined), dim=1)
             
         fusion_out = self.fusion_dense1(combined_features)
         fusion_out = nn.GELU()(fusion_out)
