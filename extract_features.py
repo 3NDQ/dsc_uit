@@ -173,20 +173,25 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
 
     return np.array(image_only_features), np.array(image_ocr_features), np.array(image_combined_features), np.array(text_features), attention_weights_list
 
-# Hàm để vẽ heatmap từ attention weights
 def visualize_attention_map(attention_weights, image_name):
-    # Kiểm tra nếu attention_weights là một tuple hoặc danh sách
+    # Kiểm tra kiểu của attention_weights
     if isinstance(attention_weights, tuple):
-        attention_weights = attention_weights[0]  # Lấy phần tử đầu tiên trong tuple
+        # Nếu attention_weights là tuple, kiểm tra xem có bao nhiêu phần tử
+        print(f"attention_weights is a tuple with {len(attention_weights)} elements.")
+        # Giả sử phần tử đầu tiên chứa các attention weights
+        attention_weights = attention_weights[0]  # Lấy phần tử đầu tiên nếu là tuple
 
-    # Đảm bảo attention_weights là một tensor với shape (1, num_heads, height, width)
-    attention_map = attention_weights[0, 0].cpu().detach().numpy()  # Lấy head đầu tiên
-
-    # Kiểm tra và chuyển đổi chiều nếu cần
-    if len(attention_map.shape) == 2:
-        attention_map = attention_map  # Nếu là 2D rồi thì giữ nguyên
-    elif len(attention_map.shape) == 3:
-        attention_map = attention_map[0]  # Nếu có thêm chiều, chọn một slice
+    # Kiểm tra lại kiểu dữ liệu và shape của attention_weights
+    print(f"Attention Weights Type: {type(attention_weights)}")
+    print(f"Attention Weights Shape: {getattr(attention_weights, 'shape', 'No shape attribute')}")
+    
+    # Đảm bảo rằng attention_weights là một tensor
+    if isinstance(attention_weights, torch.Tensor):
+        # Lấy attention map từ đầu tiên
+        attention_map = attention_weights[0, 0].cpu().detach().numpy()  # Lấy head đầu tiên
+    else:
+        print("Attention weights are not a tensor.")
+        return
 
     # Vẽ attention map
     plt.imshow(attention_map, cmap='viridis', interpolation='nearest')
