@@ -34,9 +34,11 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
         train_progress = tqdm(train_dataloader, desc=f"Training Epoch {epoch+1}/{num_epochs}", leave=False)
 
         for batch in train_progress:
-            image_features, text_features, labels = batch
-            image_features = image_features.to(device)
+            combined_image_features, text_features, ocr_features, image_features, labels = batch
+            combined_image_features = combined_image_features.to(device)
             text_features = text_features.to(device)
+            ocr_features = ocr_features.to(device)
+            image_features = image_features.to(device)
             labels = labels.to(device)
 
             device_type = "cuda" if torch.cuda.is_available() else "cpu"
@@ -45,8 +47,10 @@ def train_model(model, train_dataloader, val_dataloader, device, num_epochs, pat
 
             with torch.amp.autocast(device_type=device_type):
                 outputs = model(
-                    image_features=image_features,
+                    combined_image_features=combined_image_features,
                     text_features=text_features,
+                    ocr_features=ocr_features,
+                    image_features=image_features,
                     labels=labels
                 )
                 loss, logits = outputs
@@ -170,6 +174,7 @@ def run_train(train_features_dir, device, num_epochs, patience, batch_size, num_
         torch.tensor(val_labels, dtype=torch.long),
     )
     logging.info("Finished creating train/dev datasets")
+
     # Create DataLoaders
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
     val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=num_workers)
