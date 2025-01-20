@@ -131,9 +131,10 @@ def evaluate_model(model, dataloader, device):
 
     with torch.no_grad():
         for batch in tqdm(dataloader, desc="Evaluating", leave=False):
-            combined_image_features, text_features, ocr_features, image_features, labels = batch
+            combined_image_features, text_features, text_features2, ocr_features, image_features, labels = batch
             combined_image_features = combined_image_features.to(device)
             text_features = text_features.to(device)
+            text_features2 = text_features2.to(device)
             ocr_features = ocr_features.to(device)
             image_features = image_features.to(device)
             labels = labels.to(device)
@@ -142,6 +143,7 @@ def evaluate_model(model, dataloader, device):
             outputs = model(
                 combined_image_features=combined_image_features,
                 text_features=text_features,
+                text_features2=text_features2,
                 ocr_features=ocr_features,
                 image_features=image_features,
                 labels=labels
