@@ -33,12 +33,11 @@ class FocalLoss(nn.Module):
         self.gamma = gamma
         self.reduction = reduction
         self.alpha = alpha
-        self.label_smoothing = label_smoothing  # Add label smoothing
+        self.label_smoothing = label_smoothing 
         if alpha is not None:
             self.alpha = torch.tensor(alpha, dtype=torch.float)
 
     def forward(self, logits, targets):
-        # Apply label smoothing
         if self.label_smoothing > 0:
             n_classes = logits.size(-1)
             one_hot = torch.zeros_like(logits).scatter(1, targets.unsqueeze(1), 1)
@@ -66,18 +65,18 @@ class SelfAttention(nn.Module):
     def __init__(self, d_in, d_out_kq, d_out_v):
         super().__init__()
         self.d_out_kq = d_out_kq
-        self.W_query = nn.Parameter(torch.randn(d_in, d_out_kq) * (1. / d_in**0.5))
-        self.W_key = nn.Parameter(torch.randn(d_in, d_out_kq) * (1. / d_in**0.5)) 
-        self.W_value = nn.Parameter(torch.randn(d_in, d_out_v) * (1. / d_in**0.5)) 
+        self.W_query = nn.Linear(d_in, d_out_kq)
+        self.W_key = nn.Linear(d_in, d_out_kq)
+        self.W_value = nn.Linear(d_in, d_out_v)
 
     def forward(self, x):
-        keys = x.matmul(self.W_key)
-        queries = x.matmul(self.W_query)
-        values = x.matmul(self.W_value)
-        attn_scores = queries.matmul(keys.T)
-        attn_scores = attn_scores / (self.d_out_kq ** 0.5)  # Add scaling here
+        keys = self.W_key(x)
+        queries = self.W_query(x)
+        values = self.W_value(x)
+        attn_scores = torch.matmul(queries, keys.transpose(-2, -1))
+        attn_scores = attn_scores / (self.d_out_kq ** 0.5)
         attn_weights = torch.softmax(attn_scores, dim=-1)
-        context_vec = attn_weights.matmul(values)
+        context_vec = torch.matmul(attn_weights, values)
         return context_vec
 
 class CrossAttention(nn.Module):
@@ -94,9 +93,10 @@ class CrossAttention(nn.Module):
         queries_1 = self.W_query(x_1)
         keys_2 = self.W_key(x_2)
         values_2 = self.W_value(x_2)
-        attn_scores = queries_1.matmul(keys_2.T)
-        attn_weights = torch.softmax(attn_scores / (self.d_out_kq ** 0.5), dim=-1)
-        context_vec = attn_weights.matmul(values_2)
+        attn_scores = torch.matmul(queries_1, keys_2.transpose(-2, -1))
+        attn_scores = attn_scores / (self.d_out_kq ** 0.5)
+        attn_weights = torch.softmax(attn_scores, dim=-1)
+        context_vec = torch.matmul(attn_weights, values_2)
         return context_vec
 
 class EarlyStopping:
