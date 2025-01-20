@@ -50,9 +50,9 @@ def run_test(test_features_dir, device, batch_size, num_workers, model_paths, fu
     # Create a TensorDataset
     test_dataset = TensorDataset(
         torch.tensor(test_combined_image_features, dtype=torch.float),
-        torch.tensor(test_image_features, dtype=torch.float),
-        torch.tensor(test_ocr_features, dtype=torch.float),
         torch.tensor(test_text_features, dtype=torch.float),
+        torch.tensor(test_ocr_features, dtype=torch.float),
+        torch.tensor(test_image_features, dtype=torch.float),
     )
 
     # Create DataLoader
