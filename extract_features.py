@@ -175,9 +175,12 @@ def preprocess_data(images, texts, image_processor, image_encoder, text_tokenize
 
 # Hàm để vẽ heatmap từ attention weights
 def visualize_attention_map(attention_weights, image_name):
-    # attention_weights có shape (1, num_heads, height, width)
-    # Lấy một head để trực quan hóa
-    attention_map = attention_weights[0, 0].cpu().detach().numpy()  # Giả sử lấy head đầu tiên
+    # Kiểm tra nếu attention_weights là một danh sách
+    if isinstance(attention_weights, list):
+        attention_weights = attention_weights[0]  # Lấy phần tử đầu tiên từ danh sách
+    
+    # attention_weights giờ đây là một tensor với shape (1, num_heads, height, width)
+    attention_map = attention_weights[0, 0].cpu().detach().numpy()  # Lấy head đầu tiên
 
     # Kiểm tra và chuyển đổi chiều nếu cần
     if len(attention_map.shape) == 2:
@@ -190,6 +193,7 @@ def visualize_attention_map(attention_weights, image_name):
     plt.axis('off')  # Tắt trục nếu không cần
     plt.title(f"Attention Map for {image_name}")
     plt.show()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Extract features from image and text data.")
