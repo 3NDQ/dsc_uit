@@ -153,7 +153,7 @@ def run_train(train_features_dir, train_features_dir2, device, num_epochs, patie
     ) = train_test_split(
         train_combined_image_features,
         train_text_features,
-        train_text_features2.
+        train_text_features2,
         train_ocr_features,
         train_image_features,
         train_labels,
