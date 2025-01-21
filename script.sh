@@ -1,4 +1,4 @@
-!python extract_features.py \
+python extract_features.py \
     --data_path "/kaggle/input/vimmsd/vimmsd-train.json" \
     --image_folder "/kaggle/input/vimmsd/train-images" \
     --ocr_cache_path "/kaggle/input/ocr-cache/paddle_train_ocr_cache.json" \
@@ -7,7 +7,7 @@
     --output_dir "train_features" \
     --mode "train"
     
-!CUDA_LAUNCH_BLOCKING=1 python main.py \
+CUDA_LAUNCH_BLOCKING=1 python main.py \
     --mode train \
     --train_features_dir "/kaggle/input/features-vit-jina-embedding-v3/train_features" \
     --batch_size 32 \
@@ -21,7 +21,7 @@
     --loss_type 'focal' \
     --label_smoothing 0
 
-!python extract_features.py \
+python extract_features.py \
     --data_path "/kaggle/input/vimmsd/vimmsd-private-test.json" \
     --image_folder "/kaggle/input/vimmsd/test-images" \
     --ocr_cache_path "/kaggle/input/ocr-cache/paddle_test_ocr_cache.json" \
@@ -30,7 +30,7 @@
     --output_dir "test_features" \
     --mode "test"
 
-!python main.py \
+CUDA_LAUNCH_BLOCKING=1 python main.py \
     --mode test \
     --test_features_dir "/kaggle/input/features-vit-jina-embedding-v3/test_features" \
     --batch_size 16 \

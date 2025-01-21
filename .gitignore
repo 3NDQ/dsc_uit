@@ -1,8 +1,20 @@
-.zip
-datasets
+# Ignore everything
+*
+
+# Allow specific file types
+!*.py
+!*.yml
+!*.png
+!*.txt
+!*.ipynb
+
+# Ignore specific directories
+datasets/
 .python-version
-__pycache__
-.venv
+__pycache__/
+.venv/
 data/
-.pptx
 docs/
+
+# Ignore specific file types
+*.pptx
