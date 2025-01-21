@@ -1,4 +1,3 @@
-# model_factory.py
 from transformers import AutoImageProcessor, AutoModel, AutoTokenizer, AutoModelForImageClassification
 import logging
 

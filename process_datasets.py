@@ -1,4 +1,3 @@
-# process_data.py
 import os
 import json
 import logging

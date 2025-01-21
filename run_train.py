@@ -1,4 +1,3 @@
-# run_train.py
 import logging
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -115,15 +114,17 @@ def run_train(train_features_dir, train_features_dir2, device, num_epochs, patie
         train_labels_data = json.load(f)
     train_labels = [item["label_id"] for item in train_labels_data]
 
-    # --- Compute Class Weights ---
+    # Compute Class Weights
     class_weights = compute_class_weight(
         class_weight='balanced',
         classes=np.unique(train_labels),
         y=train_labels
     )
+    
     # class_weights_normalized = class_weights  / class_weights.sum()
     # class_weights_normalized = 1 / class_weights_normalized
     class_weights_tensor = torch.tensor(class_weights, dtype=torch.float).to(device)
+    
     # Log class weights
     logging.info("Class Weights:")
     for i, weight in enumerate(class_weights):

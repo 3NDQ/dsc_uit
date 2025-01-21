@@ -1,4 +1,3 @@
-# run_test.py
 import logging
 import torch
 import os

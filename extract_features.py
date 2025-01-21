@@ -1,4 +1,3 @@
-# extract_features.py
 import numpy as np
 import json
 import os

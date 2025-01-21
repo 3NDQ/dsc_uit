@@ -1,4 +1,3 @@
-# main.py
 import os
 import torch
 import argparse
@@ -43,7 +42,7 @@ def main():
     parser.add_argument('--fusion_method', type=str, default='concat', choices=['concat', 'attention', 'cross_attention'], help='Method to fuse features: concat (default) or attention, cross_attention')
     parser.add_argument('--loss_type', type=str, default='focal', choices=['focal', 'cross_entropy'], help='Loss type: focal or cross_entropy')
 
-    # Hyperparameters for Focal Loss
+    # Hyperparameters for Focal Loss and Label smoothing
     parser.add_argument('--gamma', type=float, default=2.0, help='Gamma parameter for Focal Loss')
     parser.add_argument('--label_smoothing', type=float, default=0.15, help='Label smoothing value (e.g., 0.15)')
 
